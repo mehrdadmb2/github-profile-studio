@@ -1,35 +1,23 @@
-# GitSkins Studio — README Builder
+# ProfileForge — GitHub README Studio
 
-A self-contained GitHub Pages README/Profile builder inspired by modern README Studio workflows. It is a clean-room implementation of the public interaction model: username scan, goal presets, skin templates, visual library, live preview, section timeline, inspector controls, local autosave, and Markdown export.
+A clean-room, GitHub Pages friendly README Studio with real public GitHub data, twelve visual profile systems, twenty themes, editable section timelines, Markdown export and optional GitHub Actions automation.
+
+## Features
+
+- Real GitHub public profile and repository scan
+- Goal presets: Get Hired, Open Source, Freelance, Founder, Student, Personal Brand
+- Twelve profile template systems
+- Twenty theme system
+- Preview / GitHub view / Markdown modes
+- Editable headline, bio, links and selected projects
+- Section timeline with reorder/remove controls
+- Local persistence in browser
+- Shareable URL state
+- README + SVG asset downloads
+- Optional scheduled GitHub Action
 
 ## Run on GitHub Pages
 
-1. Create a repository named `github-profile-studio` (or any name you like).
-2. Upload `index.html`.
-3. GitHub → Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
-4. Open the generated Pages URL.
+Upload the repository contents and enable Pages from the `main` branch root.
 
-No Node.js, build step, API key, or backend is required.
-
-## Public data
-
-The app reads public profile/repository data from the GitHub REST API in the visitor's browser. Contribution history is optionally read from `github-contributions-api.jogruber.de` because GitHub's REST API does not expose the profile contribution graph directly. Both sources are public; the contribution service documents hourly caching and rate limits.
-
-## Included studio surface
-
-- Profile / Visuals / Links navigation
-- 20 skin themes matching the public GitSkins theme catalogue names and accent palette
-- 7 README goals
-- 9 README sections + optional Streak/Support
-- Visual library: Hero, 3D Wordmark, ASCII Portrait, Chess, Space Shooter, Snake Trail, Erased, Jet Runner, Contribution Streak
-- Live Preview / GitHub view / Markdown view
-- Section reorder/remove/add controls
-- Content / Style / Agent inspector tabs
-- Local autosave via `localStorage`
-- Downloadable `README.md`
-- Copy-to-clipboard export
-- Responsive layout for desktop/tablet/mobile
-
-## Important
-
-This project intentionally does not copy Gitskins' private source code or proprietary assets. It recreates the public information architecture, interaction patterns, theme names/palette, and studio-style workflow as a clean-room implementation.
+See [SETUP.md](SETUP.md) for publishing and automation details.

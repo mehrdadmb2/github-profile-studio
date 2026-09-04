@@ -1,0 +1,18 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+const username=process.argv[2] || process.env.GITHUB_REPOSITORY_OWNER;
+if(!username) throw new Error('Username required');
+const root=process.cwd();
+const res=await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`);
+if(!res.ok) throw new Error(`GitHub API ${res.status}`);
+const repos=await res.json();
+const cRes=await fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=last`);
+const contribJson=cRes.ok?await cRes.json():{contributions:[]};
+const contributions=Array.isArray(contribJson.contributions)?contribJson.contributions:[];
+const stats={stars:repos.reduce((a,r)=>a+r.stargazers_count,0), forks:repos.reduce((a,r)=>a+r.forks_count,0), repos:repos.filter(r=>!r.fork).length};
+const asset=(name,html)=>`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300"><rect width="1200" height="300" rx="26" fill="#0b0f14"/><rect x="28" y="28" width="1144" height="244" rx="20" fill="#10161d" stroke="#2a3642"/><text x="54" y="72" fill="#4ade80" font-family="Arial" font-weight="700" font-size="16">PROFILEFORGE • ${name}</text>${html}</svg>`;
+const vals=contributions.map(x=>x.count||0); const max=Math.max(1,...vals); const heat=asset('CONTRIBUTION SIGNAL',Array.from({length:420},(_,i)=>{const x=50+(i%60)*18,y=105+Math.floor(i/60)*20,n=contributions[i]?.count||0,ratio=n/max,op=n===0?.06:ratio<.25?.2:ratio<.5?.44:ratio<.75?.68:.92;return `<rect x="${x}" y="${y}" width="14" height="14" rx="3" fill="#4ade80" opacity="${op}"/>`}).join(''));
+const dir=path.join(root,'assets'); await fs.mkdir(dir,{recursive:true}); await fs.writeFile(path.join(dir,`${username.toLowerCase()}-heatmap.svg`),heat);
+const md=`# ${username}\n\n> Profile assets refreshed automatically.\n\n![Contribution signal](assets/${username.toLowerCase()}-heatmap.svg)\n\n## GitHub snapshot\n\n- ⭐ Stars indexed: ${stats.stars}\n- 📦 Repositories: ${stats.repos}\n- ⑂ Forks: ${stats.forks}\n`;
+await fs.writeFile(path.join(root,'README.md'),md);
+console.log(`Refreshed ${username}:`,stats);

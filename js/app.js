@@ -1,136 +1,188 @@
-(() => {
-  'use strict';
-  const CFG = window.PROFILE_STUDIO_CONFIG || {};
+const App = (() => {
   const $ = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => [...r.querySelectorAll(s)];
-  const esc = v => String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  const md = v => String(v ?? '').replace(/([\\`*_{}\[\]()#+.!|>~-])/g,'\\$1');
-  const num = n => new Intl.NumberFormat('en-US').format(Number(n||0));
-  const sleep = ms => new Promise(r=>setTimeout(r,ms));
-  const clone = x => JSON.parse(JSON.stringify(x));
+  const esc = (v='') => String(v).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const mdEsc = (v='') => String(v).replace(/\[/g,'\\[').replace(/\]/g,'\\]').replace(/_/g,'\\_');
+  const formatNum = n => Intl.NumberFormat('en',{notation:n>9999?'compact':'standard',maximumFractionDigits:1}).format(n||0);
+  const slug = s => String(s||'profileforge').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 
-  const THEMES = [
-    ['aurora','Aurora','Northern lights',' #8b5cf6','#22d3ee'],['matrix','Matrix','Terminal green','#22c55e','#84cc16'],['dracula','Dracula','Purple coding classic','#bd93f9','#ff79c6'],['ocean','Ocean','Deep blue glass','#38bdf8','#06b6d4'],['sunset','Sunset','Warm gradient','#fb7185','#f59e0b'],['midnight','Midnight','Indigo night','#818cf8','#6366f1'],['cyber','Cyber','High-energy HUD','#38bdf8','#f43f5e'],['minimal','Minimal','Quiet neutral','#64748b','#94a3b8']
+  const themes = [
+    ['Satan','#ff4500','#7c2d12'],['Neon','#38bdf8','#06b6d4'],['Zen','#66bb6a','#2f7f46'],['GitHub Dark','#58a6ff','#1f6feb'],['Dracula','#bd93f9','#ff79c6'],
+    ['Winter','#60a5fa','#1e40af'],['Spring','#ec4899','#f9a8d4'],['Summer','#fbbf24','#f59e0b'],['Autumn','#d97706','#7c2d12'],['Christmas','#ef4444','#16a34a'],
+    ['Halloween','#f97316','#7c3aed'],['Ocean','#38bdf8','#0e7490'],['Forest','#4ade80','#166534'],['Sunset','#e879f9','#fb7185'],['Midnight','#818cf8','#312e81'],
+    ['Aurora','#2dd4bf','#8b5cf6'],['Retro','#ec4899','#22d3ee'],['Minimal','#64748b','#334155'],['Pastel','#a78bfa','#f9a8d4'],['Matrix','#22c55e','#14532d']
+  ].map(([name,a,b])=>({name,a,b,id:slug(name)}));
+  const goals = [
+    ['Get Hired','Proof + clarity'],['Open Source','Maintainer trust'],['Freelance','Services + outcomes'],['Founder','Product story'],['Student','Learning trajectory'],['Personal Brand','Distinct identity']
+  ].map(([name,sub])=>({name,sub,id:slug(name)}));
+  const visuals = [
+    ['Hero card','signature hero'],['Portrait','avatar portrait'],['Wordmark','typographic identity'],['System scan','technical signal'],['Stats grid','impact metrics'],['Language mix','technology breakdown'],['Projects','featured work'],['Heatmap','contribution signal'],['Social row','contact links'],['Contribution game','playground'],
+  ].map(([name,sub])=>({name,sub,id:slug(name)}));
+  const sectionsDefault = ['Header','About Me','Skills','GitHub Stats','Projects','Connect','Streak','Highlights','Heatmap'];
+  const templates = [
+    {id:'renaissance',name:'Renaissance',type:'Signature profile',accent:'#eab308',desc:'Editorial profile with a crafted hero, wordmark and story-led sections.',parts:['Hero','Wordmark','Projects','Stats','Heatmap']},
+    {id:'aurora',name:'Aurora',type:'Visual portfolio',accent:'#2dd4bf',desc:'Luminous profile with portrait, stack, projects and signal widgets.',parts:['Hero','Portrait','Wordmark','Stack','Projects']},
+    {id:'matrix',name:'Matrix',type:'System profile',accent:'#22c55e',desc:'Technical HUD with scan readouts, stack bars and activity.',parts:['Hero','System Scan','Projects','Stack','Heatmap']},
+    {id:'studio',name:'Studio',type:'Product profile',accent:'#38bdf8',desc:'Balanced product-engineering layout with highlights and metrics.',parts:['Hero','Portrait','Highlights','Projects','Stats']},
+    {id:'dracula',name:'Dracula',type:'Classic dark',accent:'#bd93f9',desc:'Dark coding aesthetic with wordmark, portrait and social details.',parts:['Hero','Wordmark','Portrait','Stats','Social']},
+    {id:'cyber',name:'Cyber',type:'Framework creator',accent:'#22d3ee',desc:'High-contrast cyber layout focused on system scan and technology.',parts:['Hero','System Scan','Projects','Stack','Heatmap']},
+    {id:'jet-runner',name:'Jet Runner',type:'Arcade profile',accent:'#f97316',desc:'Energetic arcade treatment built around projects and contributions.',parts:['Hero','Projects','Playground','Stats','Social']},
+    {id:'erased',name:'Erased',type:'Creative profile',accent:'#f8fafc',desc:'Monochrome editorial profile with portrait and contribution signal.',parts:['Hero','Portrait','Heatmap','Highlights','Social']},
+    {id:'snake-trail',name:'Snake Trail',type:'Game profile',accent:'#84cc16',desc:'Contribution-first game aesthetic with streak and projects.',parts:['Hero','Projects','Heatmap','Stats','Social']},
+    {id:'space-shooter',name:'Space Shooter',type:'Contribution game',accent:'#60a5fa',desc:'Your contribution history becomes a playful visual playground.',parts:['Hero','Projects','Playground','Stats','Social']},
+    {id:'chess-replay',name:'Chess Replay',type:'Strategy profile',accent:'#f59e0b',desc:'A strategy-inspired identity with replay panel, projects and stats.',parts:['Hero','Playground','Projects','Stats','Heatmap','Social']},
+    {id:'frosted',name:'Frosted',type:'Glass portfolio',accent:'#67e8f9',desc:'Soft cinematic glass system inspired by modern profile showcases.',parts:['Hero','Portrait','Projects','Stats','Language Mix']}
   ];
-  const TEMPLATES = [
-    ['showcase','Showcase','Whole-profile personal brand','hero,about,impact,projects,stack,stats,connect'],
-    ['recruiter','Recruiter-ready','Fast scan for hiring & freelance','hero,impact,projects,stack,connect'],
-    ['opensource','Open-source','Maintainer / contributor profile','hero,about,projects,opensource,stack,connect'],
-    ['technical','Technical authority','Architecture, proof and systems','hero,impact,projects,stack,terminal,connect'],
-    ['student','Student / learning','Learning in public and growth','hero,about,projects,learning,stack,connect'],
-    ['terminal','Terminal','Neofetch-inspired developer identity','hero,terminal,impact,projects,stack,connect'],
-    ['minimal','Minimal','Focused, lightweight profile','hero,projects,connect'],
-    ['cinematic','Cinematic','Visual-first and motion friendly','hero,about,projects,stats,connect']
-  ];
-  const PROJECT_TEMPLATES = [
-    ['launch','Project Launch','README for apps, tools and websites'],['technical','Technical Case Study','Architecture, tradeoffs and implementation'],['iot','IoT / Embedded','Hardware, firmware, wiring and setup'],['research','Research / ML','Dataset, method, metrics and findings'],['minimal','Minimal Project','Short README for compact repos']
-  ];
-  const SECTION_META = {hero:'Header',about:'About',impact:'Proof / impact',projects:'Featured projects',stack:'Stack',stats:'GitHub stats',terminal:'Terminal',opensource:'Open source',learning:'Learning journey',connect:'Connect',support:'Support'};
-  const DEFAULT_SECTIONS = ['hero','about','impact','projects','stack','stats','connect'];
-  const state = { profile:null,repos:[],languages:{}, selectedRepos:[], projectTemplate:'launch', profileTemplate:'showcase', theme:'aurora', accent:'#8b5cf6', accent2:'#22d3ee', goal:'showcase', locale:'en', glass:true,motion:true,compact:false,view:'preview',support:false,sections:DEFAULT_SECTIONS.map(id=>({id,enabled:true})), links:[], wallets:clone(CFG.donation?.wallets || []), projectRepo:null };
 
-  function toast(message){const el=$('#toast');el.textContent=message;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200)}
-  function save(){try{localStorage.setItem('profileStudioState',JSON.stringify({...state,profile:null,repos:[],languages:{}}));$('#savedText').textContent='saved locally';}catch{}}
-  function restore(){try{const s=JSON.parse(localStorage.getItem('profileStudioState'));if(!s)return;['profileTemplate','projectTemplate','theme','accent','accent2','goal','locale','glass','motion','compact','support','links','wallets','sections'].forEach(k=>{if(k in s)state[k]=s[k]});}catch{}}
-  function applyTheme(){const t=THEMES.find(x=>x[0]===state.theme)||THEMES[0];state.accent2=t[4];document.documentElement.style.setProperty('--accent',state.accent||t[3]);document.documentElement.style.setProperty('--accent2',state.accent2);document.body.classList.toggle('no-glass',!state.glass);document.body.classList.toggle('no-motion',!state.motion);renderThemeList()}
-  function defaultLinks(p){return [{label:'GitHub',value:p.html_url},{label:'Portfolio',value:'https://mehrdadmb2.github.io/mehrdad-dev/'},{label:'Email',value:'mailto:game.developer.mb@gmail.com'}]}
-  function setStatus(text,badge='SYNCED'){ $('#scanStatus').textContent=text; $('#syncBadge').textContent=badge; }
-  async function fetchJSON(url){const res=await fetch(url,{headers:{Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}); updateRate(res); if(!res.ok){if(res.status===403)throw new Error('GitHub API rate limit reached. Wait a few minutes or retry from another public network.'); if(res.status===404)throw new Error('GitHub username not found. Check the spelling and try again.'); throw new Error(`GitHub API error (${res.status}).`)} return res.json()}
-  function updateRate(res){const remaining=res.headers.get('X-RateLimit-Remaining');const limit=res.headers.get('X-RateLimit-Limit');if(remaining&&limit)$('#rateStatus').textContent=`API: ${remaining}/${limit}`}
-  async function scan(username){
-    username=username.trim().replace(/^@/,''); if(!/^[A-Za-z0-9-]{1,39}$/.test(username)) throw new Error('Enter a valid GitHub username.');
-    setStatus('Reading profile…','SCANNING'); $('#scanButton').disabled=true; $('#scanButton').textContent='Scanning…'; $('#scanError').hidden=true;
+  const state = {
+    username:'octocat', profile:null, repos:[], languages:{}, selectedRepos:[], contributions:[], template:'studio', theme:'github-dark', goal:'get-hired', density:'balanced', view:'preview', activeSection:'Header', sections:[...sectionsDefault], headline:'Developer building useful things in public.', about:'A GitHub profile generated from public work, repositories, language signal and activity. Edit this story to make the profile sound like you.', links:['GitHub'], effects:{glass:true,glow:true,noise:true}, visuals:new Set(['hero-card','portrait','stats-grid','language-mix','projects','heatmap','social-row'])
+  };
+
+  function persist(){localStorage.setItem('pf-state', JSON.stringify({...state, visuals:[...state.visuals]}));}
+  function restore(){try{const raw=localStorage.getItem('pf-state');if(!raw)return;const s=JSON.parse(raw);Object.assign(state,s,{visuals:new Set(s.visuals||[])});}catch{}}
+  function setQuery(){const u=new URL(location.href);u.searchParams.set('username',state.username);u.searchParams.set('template',state.template);u.searchParams.set('theme',state.theme);u.searchParams.set('goal',state.goal);history.replaceState({},'',u)}
+  function loadQuery(){const u=new URL(location.href); if(u.searchParams.get('username'))state.username=u.searchParams.get('username'); if(u.searchParams.get('template'))state.template=u.searchParams.get('template'); if(u.searchParams.get('theme'))state.theme=u.searchParams.get('theme'); if(u.searchParams.get('goal'))state.goal=u.searchParams.get('goal')}
+  function applyTheme(){const t=themes.find(x=>x.id===state.theme)||themes[3];document.documentElement.style.setProperty('--accent',t.a);document.documentElement.style.setProperty('--accent-rgb',hexToRgb(t.a));document.documentElement.style.setProperty('--accent2',t.b);}
+  function hexToRgb(hex){const n=hex.replace('#','');return `${parseInt(n.slice(0,2),16)},${parseInt(n.slice(2,4),16)},${parseInt(n.slice(4,6),16)}`}
+  function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200)}
+
+  async function fetchGitHub(){
+    const u=state.username.trim().replace(/^@/,'');
+    if(!/^[a-zA-Z0-9-]{1,39}$/.test(u)){toast('Enter a valid GitHub username');return false}
+    $('#scanStatus').textContent='Scanning public profile…';
     try{
-      const profile=await fetchJSON(`https://api.github.com/users/${encodeURIComponent(username)}`);
+      const profileRes=await fetch(`https://api.github.com/users/${encodeURIComponent(u)}`,{headers:{Accept:'application/vnd.github+json'}});
+      if(!profileRes.ok) throw new Error(profileRes.status===404?'GitHub user not found':'GitHub API error');
+      const profile=await profileRes.json(); state.profile=profile; state.username=profile.login;
       const repos=[]; let page=1;
-      while(page<=3){const batch=await fetchJSON(`https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100&page=${page}&sort=updated`); repos.push(...batch); if(batch.length<100)break; page++; await sleep(40)}
-      state.profile=profile;state.repos=repos;state.languages={};
-      for(const r of repos){if(r.language)state.languages[r.language]=(state.languages[r.language]||0)+1}
-      state.selectedRepos=[]; state.projectRepo=repos[0]||null;
-      if(!state.links.length)state.links=defaultLinks(profile);
-      if(username.toLowerCase()===(CFG.defaultUsername||'').toLowerCase()) state.support=Boolean(CFG.donation?.enabledForDefaultUser);
-      $('#username').value=username; $('#avatar').src=profile.avatar_url; $('#railName').textContent=profile.name||profile.login; $('#railHandle').textContent='@'+profile.login; $('#displayName').value=profile.name||profile.login; $('#headline').value=profile.bio?'Developer · '+(profile.company?profile.company.replace('@',''):'Builder'):'Software developer · Builder · Open source'; $('#bio').value=profile.bio||'I build practical software, tools and experiments and share the work openly on GitHub.'; $('#openProfile').href=profile.html_url; $('#exportName').textContent=`${profile.login} / README.md`;
-      $('#empty').hidden=true; $('#rendered').hidden=false; setStatus(`Synced @${profile.login} · ${repos.length} repositories`,'SYNCED'); renderAll(); toast(`Loaded @${profile.login}`); save(); document.querySelector('#studio').scrollIntoView({behavior:'smooth',block:'start'});
-    }catch(err){$('#scanError').hidden=false;$('#scanError').textContent=err.message;setStatus('Scan failed','ERROR');toast(err.message)}finally{$('#scanButton').disabled=false;$('#scanButton').innerHTML='Generate <span>→</span>'}
-  }
-  function renderTemplates(){const box=$('#templateList');box.innerHTML=TEMPLATES.map(t=>`<button class="template-card ${state.profileTemplate===t[0]?'active':''}" data-template="${t[0]}" type="button"><strong>${t[1]}</strong><small>${t[2]}</small></button>`).join(''); $$('.template-card',box).forEach(b=>b.onclick=()=>{state.profileTemplate=b.dataset.template;const t=TEMPLATES.find(x=>x[0]===state.profileTemplate);state.sections=t[3].split(',').map(id=>({id,enabled:true}));$('#goal').value=state.profileTemplate;renderAll();save()}); const pbox=$('#projectTemplateList');pbox.innerHTML=PROJECT_TEMPLATES.map(t=>`<button class="template-card ${state.projectTemplate===t[0]?'active':''}" data-pt="${t[0]}" type="button"><strong>${t[1]}</strong><small>${t[2]}</small></button>`).join('');$$('.template-card',pbox).forEach(b=>b.onclick=()=>{state.projectTemplate=b.dataset.pt;renderProjectPreview();renderTimeline();save()})}
-  function renderThemeList(){const box=$('#themeList');box.innerHTML=THEMES.map(t=>`<button class="theme-card ${state.theme===t[0]?'active':''}" data-theme="${t[0]}" type="button"><div class="theme-swatch" style="--sw1:${t[3]};--sw2:${t[4]}"></div><strong>${t[1]}</strong><small>${t[2]}</small></button>`).join('');$$('.theme-card',box).forEach(b=>b.onclick=()=>{state.theme=b.dataset.theme;const t=THEMES.find(x=>x[0]===state.theme);state.accent=t[3];$('#accent').value=t[3];applyTheme();renderPreview();save()})}
-  function renderSectionEditor(){const box=$('#sectionEditor');box.innerHTML=state.sections.map((s,i)=>`<div class="section-row"><input type="checkbox" data-toggle="${i}" ${s.enabled?'checked':''}><div><strong>${esc(SECTION_META[s.id]||s.id)}</strong><small>${s.id}</small></div><div class="arrows"><button data-up="${i}" type="button">↑</button><button data-down="${i}" type="button">↓</button></div></div>`).join('');$$('[data-toggle]',box).forEach(x=>x.onchange=()=>{state.sections[+x.dataset.toggle].enabled=x.checked;renderPreview();renderTimeline();save()});$$('[data-up]',box).forEach(x=>x.onclick=()=>moveSection(+x.dataset.up,-1));$$('[data-down]',box).forEach(x=>x.onclick=()=>moveSection(+x.dataset.down,1))}
-  function moveSection(i,d){const n=i+d;if(n<0||n>=state.sections.length)return;[state.sections[i],state.sections[n]]=[state.sections[n],state.sections[i]];renderSectionEditor();renderTimeline();renderPreview();save()}
-  function renderTimeline(){const box=$('#timelineItems');box.innerHTML=state.sections.map((s,i)=>`<div class="timeline-item ${s.enabled?'':'off'}"><span>${esc(SECTION_META[s.id]||s.id)}</span><button data-tu="${i}" aria-label="Move up">↑</button><button data-td="${i}" aria-label="Move down">↓</button></div>`).join('');$$('[data-tu]',box).forEach(b=>b.onclick=()=>moveSection(+b.dataset.tu,-1));$$('[data-td]',box).forEach(b=>b.onclick=()=>moveSection(+b.dataset.td,1))}
-  function renderWallets(){const box=$('#walletEditor');box.innerHTML=state.wallets.map((w,i)=>`<div class="wallet"><div class="wallet-title"><div><b>${esc(w.label)}</b><small> · ${esc(w.network)}</small></div><label><input type="checkbox" data-wallet="${i}" ${w.enabled!==false?'checked':''}></label></div><code>${esc(w.address)}</code></div>`).join('');$$('[data-wallet]',box).forEach(x=>x.onchange=()=>{state.wallets[+x.dataset.wallet].enabled=x.checked;renderPreview();save()})}
-  function activeSections(){return state.sections.filter(s=>s.enabled).map(s=>s.id)}
-  function selectedRepos(){const all=[...state.repos].sort((a,b)=>((b.stargazers_count||0)-(a.stargazers_count||0))*0.65 + (new Date(b.updated_at)-new Date(a.updated_at))*0.0000000001);return (state.selectedRepos.length?state.repos.filter(r=>state.selectedRepos.includes(r.id)):all).filter(r=>!r.fork).slice(0,state.compact?3:6)}
-  function profileHeadline(){const v=$('#headline').value.trim();return v||'Developer · Builder · Open source'}
-  function profileBio(){const v=$('#bio').value.trim();return v||'I build practical software, tools and experiments and share the work openly on GitHub.'}
-  function langList(){return Object.entries(state.languages).sort((a,b)=>b[1]-a[1]).map(([k])=>k).slice(0,10)}
-  function stars(){return state.repos.reduce((s,r)=>s+(r.stargazers_count||0),0)}
-  function renderProfileHTML(){const p=state.profile;if(!p)return'';let body='';for(const id of activeSections()){if(id==='hero')body+=`<section class="readme-hero"><img class="readme-avatar" src="${esc(p.avatar_url)}" alt="${esc(p.login)} avatar"><h1>${esc($('#displayName').value||p.name||p.login)}</h1><div class="headline">${esc(profileHeadline())}</div><p class="bio">${esc(profileBio())}</p><div class="readme-links">${state.links.map(l=>`<a href="${esc(l.value)}" target="_blank" rel="noreferrer">${esc(l.label)}</a>`).join('')}</div></section>`;if(id==='about')body+=section('About',`<p>${esc(profileBio())}</p><p>Based on public GitHub profile context, this profile highlights the work, tools and experiments that best represent the author.</p>`);if(id==='impact')body+=section('Proof / impact',`<div class="metric-grid"><div class="metric-card"><b>${num(p.public_repos)}</b><span>public repositories</span></div><div class="metric-card"><b>${num(stars())}</b><span>repository stars</span></div><div class="metric-card"><b>${num(p.followers)}</b><span>followers</span></div></div>`);if(id==='projects')body+=section('Featured work',`<div class="repo-grid">${selectedRepos().map(repoCard).join('')}</div>`);if(id==='stack')body+=section('Stack',`<div class="tag-row">${langList().map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>`);if(id==='stats')body+=section('GitHub stats',`<div class="metric-grid"><div class="metric-card"><b>${num(p.followers)}</b><span>followers</span></div><div class="metric-card"><b>${num(p.following)}</b><span>following</span></div><div class="metric-card"><b>${num(p.public_repos)}</b><span>public repos</span></div></div>`);if(id==='terminal')body+=section('Terminal',`<div style="background:#0b0f15;color:#b9fbc0;padding:15px;border-radius:12px;font:12px/1.75 JetBrains Mono">$ whoami<br>${esc(p.login)}<br>$ focus<br>${esc(profileHeadline())}<br>$ ls featured/<br>${selectedRepos().map(r=>esc(r.name)).join(' &nbsp; ')}</div>`);if(id==='opensource')body+=section('Open source',`<p>Public repositories are available for exploration, issues and contributions. Use the project links above as the starting point.</p>`);if(id==='learning')body+=section('Learning journey',`<p>Experiments, prototypes and lessons learned are documented through public repositories and iteration.</p>`);if(id==='connect')body+=section('Connect',`<div class="readme-links" style="background:#f7f8fa;padding:10px;border-radius:12px">${state.links.map(l=>`<a style="color:#344054;border-color:#d0d5dd;background:#fff" href="${esc(l.value)}" target="_blank" rel="noreferrer">${esc(l.label)}</a>`).join('')}</div>`);if(id==='support'&&state.support)body+=supportHTML();}
-    return `<div class="readme-shell"><div class="readme-body" style="padding-top:0">${body}</div></div>`;
-  }
-  function section(title,html){return `<section class="readme-section"><h2>${title}</h2>${html}</section>`}
-  function repoCard(r){return `<a class="repo-card" href="${esc(r.html_url)}" target="_blank" rel="noreferrer"><h3>${esc(r.name)}</h3><p>${esc(r.description||'Open-source project on GitHub.')}</p><div class="tag-row"><span class="tag">★ ${num(r.stargazers_count)}</span>${r.language?`<span class="tag">${esc(r.language)}</span>`:''}${r.forks_count?`<span class="tag">⑂ ${num(r.forks_count)}</span>`:''}</div></a>`}
-  function supportHTML(){const enabled=state.wallets.filter(w=>w.enabled!==false);return section('Support',`<p>If this work is useful, you can support future open-source projects. Always verify the network before sending.</p>${enabled.map(w=>`<div style="border:1px solid #e5e7eb;border-radius:12px;padding:11px;margin-top:8px"><strong>${esc(w.label)}</strong><div style="font-size:11px;color:#667085;margin-top:3px">${esc(w.network)}</div><code style="display:block;margin-top:7px;overflow-wrap:anywhere;font-size:10px">${esc(w.address)}</code></div>`).join('')}`)}
-  function renderProjectRepoSelect(){
-    const sel=$('#projectRepoSelect');
-    if(!sel)return;
-    const repos=state.repos.filter(r=>!r.fork);
-    sel.innerHTML=repos.length?repos.slice(0,100).map(r=>`<option value="${r.id}" ${state.projectRepo&&state.projectRepo.id===r.id?'selected':''}>${esc(r.name)}</option>`).join(''):'<option value="">Scan a profile first</option>';
-  }
-  function projectMarkdown(){
-    const r=state.projectRepo||state.repos.find(x=>!x.fork);
-    if(!r)return '# Project README\n\nScan a GitHub profile and choose a repository.';
-    const tpl=state.projectTemplate;
-    const title=r.name;
-    const desc=r.description||'A GitHub project documented with Profile Studio.';
-    const stack=r.language?`\`${r.language}\``:'`GitHub`';
-    if(tpl==='minimal') return `# ${title}\n\n${desc}\n\n## Install\n\nSee the repository files and releases for installation instructions.\n\n## Usage\n\nOpen the project at ${r.html_url} and follow the latest usage instructions.\n\n## Notes\n\n- Language: ${stack}\n- Stars: ${r.stargazers_count||0}\n- Forks: ${r.forks_count||0}`;
-    if(tpl==='technical') return `# ${title}\n\n${desc}\n\n## Problem\n\nWhat problem this project solves and who it is for.\n\n## Architecture\n\nDescribe the main components, data flow and key trade-offs.\n\n## Implementation\n\n- Language: ${stack}\n- Repository: ${r.html_url}\n\n## Testing\n\nDocument important checks, test commands and known edge cases.\n\n## Roadmap\n\n- Improve documentation\n- Add focused tests\n- Ship the next useful feature\n\n## License\n\nSee the repository license.`;
-    if(tpl==='iot') return `# ${title}\n\n${desc}\n\n## Hardware\n\nList boards, sensors, modules and required parts.\n\n## Wiring\n\nDocument connections, pins and power requirements.\n\n## Firmware\n\nExplain flashing, configuration and runtime behavior.\n\n## Setup\n\n1. Clone ${r.html_url}\n2. Install the required toolchain.\n3. Configure the device.\n4. Flash and test.\n\n## Troubleshooting\n\nAdd the most common wiring, firmware and connectivity fixes.`;
-    if(tpl==='research') return `# ${title}\n\n${desc}\n\n## Abstract\n\nSummarize the research question and the practical outcome.\n\n## Dataset\n\nDocument source, preprocessing and split strategy.\n\n## Method\n\nDescribe the model, baseline and experimental setup.\n\n## Results\n\nReport the important metrics and observations.\n\n## Reproducibility\n\nList environment, commands, seeds and dependencies.`;
-    return `# ${title}\n\n${desc}\n\n[![GitHub](https://img.shields.io/badge/GitHub-Repository-18181b?logo=github)](${r.html_url})\n\n## Overview\n\nExplain what the project does, why it exists, and who it helps.\n\n## Features\n\n- Clear feature one\n- Clear feature two\n- Clear feature three\n\n## Demo\n\nAdd a live link, screenshot or short video here.\n\n## Installation\n\n\`\`\`bash\ngit clone ${r.html_url}.git\n\`\`\`\n\n## Usage\n\nShow the main workflow with one real example.\n\n## Tech stack\n\n${stack}\n\n## Roadmap\n\n- Improve documentation\n- Add tests\n- Ship the next milestone\n\n## License\n\nSee the repository license.`;
-  }
-  function generateMarkdown(){
-    const p=state.profile;
-    if(!p) return '# GitHub Profile\n\nEnter a GitHub username to generate a README.';
-    const lines=[];
-    const fence='```';
-    for(const id of activeSections()){
-      if(id==='hero'){
-        lines.push(`<div align="center">\n\n<img src="${p.avatar_url}" width="96" height="96" alt="${md(p.login)} avatar">\n\n# ${md($('#displayName').value||p.name||p.login)}\n\n**${md(profileHeadline())}**\n\n${md(profileBio())}\n\n${state.links.map(l=>`[${md(l.label)}](${l.value})`).join(' · ')}\n\n</div>`);
+      while(page<=3){
+        const r=await fetch(`https://api.github.com/users/${encodeURIComponent(u)}/repos?per_page=100&page=${page}&sort=updated&direction=desc`,{headers:{Accept:'application/vnd.github+json'}}); if(!r.ok)break; const arr=await r.json(); repos.push(...arr); if(arr.length<100)break; page++;
       }
-      if(id==='about') lines.push(`## About\n\n${profileBio()}`);
-      if(id==='impact') lines.push(`## Proof / impact\n\n| Signal | Value |\n|---|---:|\n| Public repositories | ${p.public_repos} |\n| Repository stars | ${stars()} |\n| Followers | ${p.followers} |`);
-      if(id==='projects') lines.push(`## Featured work\n\n${selectedRepos().map(r=>`- **[${md(r.name)}](${r.html_url})** — ${r.description||'Open-source project'}${r.language?` · ${fence}${md(r.language)}${fence}`:''} · ★ ${r.stargazers_count||0}`).join('\n')}`);
-      if(id==='stack') lines.push(`## Stack\n\n${langList().map(x=>`${fence}${md(x)}${fence}`).join(' · ')}`);
-      if(id==='stats') lines.push(`## GitHub stats\n\n![GitHub Stats](https://github-readme-stats.vercel.app/api?username=${encodeURIComponent(p.login)}&show_icons=true&theme=${statsTheme()}&hide_border=true&rank_icon=github)\n\n![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=${encodeURIComponent(p.login)}&layout=compact&theme=${statsTheme()}&hide_border=true)`);
-      if(id==='terminal') lines.push(`## Terminal\n\n${fence}text\n$ whoami\n${p.login}\n$ focus\n${profileHeadline()}\n$ featured\n${selectedRepos().map(r=>r.name).join(' | ')}\n${fence}`);
-      if(id==='opensource') lines.push(`## Open source\n\nPublic repositories are available for exploration, issues and contributions.`);
-      if(id==='learning') lines.push(`## Learning journey\n\nExperiments and lessons learned are documented through public projects.`);
-      if(id==='connect') lines.push(`## Connect\n\n${state.links.map(l=>`- [${md(l.label)}](${l.value})`).join('\n')}`);
-      if(id==='support' && state.support){
-        const ws=state.wallets.filter(w=>w.enabled!==false);
-        lines.push(`## Support\n\nIf this work is useful, you can support future projects. **Always verify the network before sending.**\n\n${ws.map(w=>`- **${md(w.label)} — ${md(w.network)}** · ${fence}${w.address}${fence}`).join('\n')}`);
-      }
-    }
-    lines.push(`---\n\n> Generated with Profile Studio. Edit anything before publishing.`);
-    return lines.filter(Boolean).join('\n\n');
+      state.repos=repos.filter(r=>!r.fork);
+      try {
+        const c=await fetch(`https://github-contributions-api.jogruber.de/v4/${encodeURIComponent(u)}?y=last`);
+        if(c.ok){const cj=await c.json(); state.contributions=Array.isArray(cj.contributions)?cj.contributions:[];}
+      } catch { state.contributions=[]; }
+      const langs={}; state.repos.slice(0,60).forEach(r=>Object.entries(r.language?{[r.language]:1}:{}).forEach(([k,v])=>langs[k]=(langs[k]||0)+v)); state.languages=langs;
+      const ranked=[...state.repos].sort((a,b)=>(b.stargazers_count+b.forks_count)-(a.stargazers_count+a.forks_count)).slice(0,6); state.selectedRepos=ranked.map(r=>r.full_name);
+      state.headline=inferHeadline(); state.about=inferAbout();
+      $('#scanStatus').textContent=`Loaded ${state.repos.length} public repositories.`; toast('Profile scanned');
+      persist(); setQuery(); renderAll(); return true;
+    }catch(e){$('#scanStatus').textContent=e.message;toast(e.message);return false}
   }
-  function statsTheme(){return ({aurora:'tokyonight',matrix:'dark',dracula:'dracula',ocean:'algolia',sunset:'radical',midnight:'dark',cyber:'highcontrast',minimal:'transparent'}[state.theme]||'dark')}
-  function renderProjectPreview(){/* Project generator is rendered inside the inspector when a repo exists. */}
-  function renderPreview(){if(!state.profile)return;applyTheme();$('#rendered').innerHTML=renderProfileHTML();$('#markdown').textContent=$('#outputType')?.value==='project'?projectMarkdown():generateMarkdown();$('#rendered').hidden=state.view==='markdown';$('#markdown').hidden=state.view!=='markdown';$('#rendered').style.opacity=state.motion?'1':'.98';$('#rendered').classList.toggle('compact',state.compact)}
-  function renderAll(){renderTemplates();renderThemeList();renderSectionEditor();renderTimeline();renderWallets();renderProjectRepoSelect();renderPreview()}
-  function switchPanel(name){$$('.rail-tab').forEach(b=>b.classList.toggle('active',b.dataset.panel===name));$$('.inspector-panel').forEach(p=>p.classList.toggle('active',p.id===`panel-${name}`))}
-  async function copy(text){if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true}const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch{}ta.remove();return ok}
+
+  function inferHeadline(){
+    const langs=Object.entries(state.languages).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k).join(' · ');
+    const topics=[...state.repos.flatMap(r=>r.topics||[])].slice(0,4);
+    if(topics.length)return `Building ${topics.slice(0,2).join(' + ')} with ${langs||'code'}.`;
+    return `Building useful things in ${langs||'code'} and sharing the journey.`;
+  }
+  function inferAbout(){
+    const p=state.profile||{}; const role=p.bio||'Developer profile generated from public GitHub work.'; return role;
+  }
+
+  function githubContributionGrid(){
+    const vals=state.contributions.map(x=>x.count||0); const max=Math.max(1,...vals);
+    const cells=Array.from({length:168},(_,i)=>{const n=state.contributions[i]?.count||0; const ratio=n/max; const c=n===0?'':ratio<.25?'on1':ratio<.5?'on2':ratio<.75?'on3':'on4'; return `<i class="heat-cell ${c}" title="${n} contributions"></i>`});
+    return cells.join('');
+  }
+  function selectedRepos(){
+    const chosen=state.repos.filter(r=>state.selectedRepos.includes(r.full_name));
+    return chosen.length?chosen.slice(0,4):state.repos.slice(0,4);
+  }
+  function template(){return templates.find(t=>t.id===state.template)||templates[3]}
+  function renderPreview(){
+    const p=state.profile||{login:state.username,name:state.username,bio:'Developer profile generated from public GitHub work.',avatar_url:'assets/avatar-placeholder.svg',followers:0,following:0,public_repos:state.repos.length};
+    const langs=Object.entries(state.languages).sort((a,b)=>b[1]-a[1]).slice(0,5); const total=langs.reduce((a,[,v])=>a+v,0)||1;
+    const repos=selectedRepos(); const tech=langs.length?langs:['JavaScript', 'TypeScript', 'Python'].map(x=>[x,1]);
+    const metricCards=[['STARS',state.repos.reduce((s,r)=>s+r.stargazers_count,0)],['REPOS',p.public_repos||state.repos.length],['FOLLOWERS',p.followers||0],['CONTRIB','LIVE*']];
+    const sectionByName=name=>state.sections.includes(name);
+    const projectHtml=repos.map(r=>`<article class="project-card"><h4>${esc(r.name)}</h4><p>${esc(r.description||'Public project with no description yet.')}</p><div class="project-meta"><span>★ ${formatNum(r.stargazers_count)}</span><span>⑂ ${formatNum(r.forks_count)}</span><span>${esc(r.language||'Code')}</span></div></article>`).join('');
+    const statRows=tech.map(([n,v],i)=>`<div class="bar-line"><span>${esc(n)}</span><div class="bar"><i style="width:${Math.max(22,Math.round(v/total*100))}%"></i></div><span>${Math.round(v/total*100)}%</span></div>`).join('');
+    const social=state.links.map(x=>`<a class="social-link" href="#">${esc(x)}</a>`).join('');
+    const parts=[];
+    parts.push(`<section class="readme-hero"><div class="avatar-wrap"><img src="${esc(p.avatar_url||'assets/avatar-placeholder.svg')}" alt="${esc(p.login)} avatar"></div><div class="hero-copy"><div class="hero-handle">@${esc(p.login)}</div><div class="hero-name">${esc(p.name||p.login)}</div><div class="hero-bio">${esc(state.headline)}</div><div class="metric-row">${metricCards.map(([k,v])=>`<div class="metric"><b>${esc(formatNum(typeof v==='number'?v:0))}${v==='LIVE*'?'*':''}</b><span>${k}</span></div>`).join('')}</div></div></section>`);
+    if(sectionByName('About Me')) parts.push(`<section class="readme-section"><div class="section-label">WHOAMI</div><div class="terminal-block">$ cat about.md\n\n${esc(state.about)}\n\n$ echo "open to collaboration"</div></section>`);
+    if(sectionByName('Skills')) parts.push(`<section class="readme-section"><div class="section-label">TECH ARSENAL</div><div class="tag-row">${tech.map(([n])=>`<span class="tag">${esc(n)}</span>`).join('')}</div></section>`);
+    if(sectionByName('GitHub Stats')) parts.push(`<section class="readme-section"><div class="stats-grid"><div class="stat-visual"><div class="section-label">GITHUB STATS</div><h3 style="margin:0;font-size:26px">${formatNum(metricCards[0][1])} ★</h3><p style="color:var(--muted);margin:4px 0 14px">indexed impact across public repositories</p>${['Stars','Repositories','Followers'].map((k,i)=>`<div class="bar-line"><span>${k}</span><div class="bar"><i style="width:${[78,55,62][i]}%"></i></div><span>signal</span></div>`).join('')}</div><div class="stat-visual"><div class="section-label">LANGUAGE MIX</div><div class="bar-stack">${statRows}</div></div></div></section>`);
+    if(sectionByName('Projects')) parts.push(`<section class="readme-section"><div class="section-label">FEATURED PROJECTS</div><div class="project-grid">${projectHtml||'<div class="project-card"><h4>No projects yet</h4><p>Run the GitHub scan to populate real repositories.</p></div>'}</div></section>`);
+    if(sectionByName('Highlights')) parts.push(`<section class="readme-section"><div class="section-label">HIGHLIGHTS</div><div class="metric-row"><div class="metric"><b>${formatNum(p.public_repos||0)}</b><span>public repos</span></div><div class="metric"><b>${formatNum(p.followers||0)}</b><span>followers</span></div><div class="metric"><b>${formatNum(state.repos.reduce((s,r)=>s+r.forks_count,0))}</b><span>forks</span></div><div class="metric"><b>${esc(p.company||'Independent')}</b><span>workspace</span></div></div></section>`);
+    if(sectionByName('Heatmap')) parts.push(`<section class="readme-section"><div class="section-label">CONTRIBUTION SIGNAL</div><div class="stat-visual"><div class="heatmap">${githubContributionGrid()}</div></div></section>`);
+    if(sectionByName('Streak')) parts.push(`<section class="readme-section"><div class="section-label">STREAK</div><div class="terminal-block">Contribution streak widget ready for your generated package.\nConnect the optional Action to refresh it automatically.</div></section>`);
+    if(sectionByName('Connect')) parts.push(`<section class="readme-section"><div class="section-label">CONTACT</div><div class="social-row">${social}</div></section>`);
+    const visualNote=state.visuals.has('contribution-game')?`<section class="readme-section"><div class="section-label">CONTRIBUTION PLAYGROUND</div><div class="terminal-block">[ PLAYGROUND READY ]\nThe exported package can include a theme-matched contribution game asset.</div></section>`:'';
+    parts.push(visualNote);
+    parts.push(`<div class="readme-footer">Generated by ProfileForge · ${esc(template().name)} · ${esc((themes.find(t=>t.id===state.theme)||themes[3]).name)}</div>`);
+    const density=state.density==='compact'?'':state.density==='cinematic'?' style="padding:34px"':'';
+    $('#previewCanvas').innerHTML=`<div class="readme-inner"${density}>${parts.join('')}</div>`;
+  }
+
+  function buildMarkdown(){
+    const p=state.profile||{login:state.username,name:state.username,bio:'Developer profile generated from public GitHub work.',avatar_url:'assets/avatar-placeholder.svg',followers:0,following:0,public_repos:state.repos.length};
+    const theme=themes.find(t=>t.id===state.theme)||themes[3]; const repos=selectedRepos();
+    const lines=[`# ${p.name||p.login}`, '', `> ${state.headline}`, '', `![Profile avatar](${p.avatar_url||'assets/avatar-placeholder.svg'})`, '', `## WHOAMI`, '', state.about, ''];
+    if(state.sections.includes('Skills')) lines.push('## TECH ARSENAL','',Object.keys(state.languages).sort((a,b)=>state.languages[b]-state.languages[a]).slice(0,8).map(x=>`- ${x}`).join('\n'),'');
+    if(state.sections.includes('GitHub Stats')) lines.push('## GITHUB STATS','',`- ⭐ Stars indexed: ${formatNum(state.repos.reduce((s,r)=>s+r.stargazers_count,0))}`,`- 📦 Public repositories: ${formatNum(p.public_repos||state.repos.length)}`,`- 👥 Followers: ${formatNum(p.followers||0)}`,'');
+    if(state.sections.includes('Projects')){lines.push('## FEATURED PROJECTS','');repos.forEach(r=>lines.push(`### [${r.name}](${r.html_url})`,``,mdEsc(r.description||'Public project.'),``, `**${r.language||'Code'}** · ⭐ ${r.stargazers_count} · ⑂ ${r.forks_count}`,'') )}
+    if(state.sections.includes('Heatmap')) lines.push('## CONTRIBUTION SIGNAL','',`![Contribution grid](assets/${slug(p.login)}-heatmap.svg)`,'');
+    if(state.sections.includes('Connect')) lines.push('## CONTACT','',state.links.map(x=>`- ${x}`).join('\n'),'');
+    if(state.visuals.has('contribution-game')) lines.push('## CONTRIBUTION PLAYGROUND','',`![Contribution playground](assets/${slug(p.login)}-playground.svg)`,'');
+    lines.push(`---`,`Theme: **${theme.name}** · Template: **${template().name}** · Generated with ProfileForge`);
+    return lines.join('\n');
+  }
+
+  function renderMarkdown(){ $('#markdownCanvas').textContent=buildMarkdown(); }
+
+  function renderAll(){
+    applyTheme(); renderGoalGrid(); renderTemplateList(); renderVisualList(); renderThemeGrid(); renderTimeline(); renderSignals(); renderProjects(); renderPreview(); renderMarkdown(); $('#headlineInput').value=state.headline; $('#aboutInput').value=state.about; $('#linksInput').value=state.links.join('\n'); $('[data-view="'+state.view+'"]')?.classList.add('active'); updateView();
+  }
+  function renderGoalGrid(){ $('#goalGrid').innerHTML=goals.map(g=>`<button class="goal-btn ${state.goal===g.id?'active':''}" data-goal="${g.id}"><b>${g.name}</b><small>${g.sub}</small></button>`).join('') }
+  function renderTemplateList(){ $('#templateList').innerHTML=templates.map(t=>`<button class="template-btn ${state.template===t.id?'active':''}" data-template="${t.id}"><span class="template-meta"><span class="swatch" style="color:${t.accent};background:${t.accent}"></span>${t.name}</span><span>›</span></button>`).join('') }
+  function renderVisualList(){ $('#visualList').innerHTML=visuals.map(v=>`<button class="visual-btn ${state.visuals.has(v.id)?'active':''}" data-visual="${v.id}"><span>${v.name}</span><small>${v.sub}</small></button>`).join('') }
+  function renderThemeGrid(){ $('#themeGrid').innerHTML=themes.map(t=>`<button class="theme-btn ${state.theme===t.id?'active':''}" data-theme="${t.id}" style="--t1:${t.a};--t2:${t.b}">${esc(t.name)}<small>${esc(t.name==='GitHub Dark'?'Pro standard':'Theme')}</small></button>`).join(''); $('#themeCatalog').innerHTML=themes.map(t=>`<div class="theme-swatch-card"><div class="theme-swatch" style="--g1:${t.a};--g2:${t.b}"></div><b>${esc(t.name)}</b><span>${t.a}</span></div>`).join('') }
+  function renderTimeline(){ $('#timeline').innerHTML=state.sections.map((s,i)=>`<div class="timeline-item ${state.activeSection===s?'active':''}" data-section="${s}"><div class="num">${String(i+1).padStart(2,'0')}</div><b>${s}</b><div class="timeline-controls"><button data-move="up">↑</button><button data-move="down">↓</button><button data-move="remove">×</button></div></div>`).join('') }
+  function renderSignals(){ const p=state.profile; const total=state.repos.reduce((s,r)=>s+r.stargazers_count,0); $('#signalGrid').innerHTML=`<div class="signal"><b>${formatNum(total)}</b><span>Stars</span></div><div class="signal"><b>${formatNum(p?.followers||0)}</b><span>Followers</span></div><div class="signal"><b>${formatNum(state.repos.length)}</b><span>Repos</span></div><div class="signal"><b>${formatNum(state.repos.reduce((s,r)=>s+r.forks_count,0))}</b><span>Forks</span></div>` }
+  function renderProjects(){ $('#projectPicker').innerHTML=state.repos.slice(0,30).map(r=>`<label class="project-item"><input type="checkbox" data-repo="${esc(r.full_name)}" ${state.selectedRepos.includes(r.full_name)?'checked':''}><span><b>${esc(r.name)}</b><small style="display:block;color:var(--muted)">${esc(r.language||'Code')} · ★ ${r.stargazers_count}</small></span></label>`).join('') || '<div class="hint">Scan a profile to load repositories.</div>' }
+  function updateView(){ $$('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===state.view)); $('#previewCanvas').classList.toggle('hidden',state.view!=='preview'&&state.view!=='github'); $('#markdownCanvas').classList.toggle('hidden',state.view!=='markdown'); $('#previewCanvas').style.background=state.view==='github'?'#fff':'#0d1217'; $('#previewCanvas').style.color=state.view==='github'?'#222':'inherit'; }
+
+  function buildAssetSvgs(){
+    const p=state.profile||{login:state.username,name:state.username,avatar_url:''}; const t=themes.find(x=>x.id===state.theme)||themes[3]; const u=slug(p.login);
+    const base=(w,h,body)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="${t.a}"/><stop offset="1" stop-color="${t.b}"/></linearGradient><filter id="s"><feGaussianBlur stdDeviation="18"/></filter></defs><rect width="${w}" height="${h}" rx="28" fill="#0b0f14"/><circle cx="${w-80}" cy="70" r="100" fill="url(#g)" opacity=".18" filter="url(#s)"/>${body}</svg>`;
+    const hero=base(1200,420,`<rect x="40" y="40" width="1120" height="340" rx="22" fill="#10161d" stroke="#2a3642"/><circle cx="150" cy="180" r="82" fill="url(#g)"/><circle cx="150" cy="180" r="67" fill="#111821"/><text x="250" y="155" fill="${t.a}" font-family="Arial" font-size="18" font-weight="700">@${esc(p.login)}</text><text x="250" y="205" fill="#f5f7f5" font-family="Arial" font-size="38" font-weight="700">${esc(p.name||p.login)}</text><text x="250" y="250" fill="#94a3af" font-family="Arial" font-size="20">${esc(state.headline.slice(0,58))}</text><rect x="250" y="290" width="155" height="38" rx="19" fill="url(#g)"/><text x="327" y="315" text-anchor="middle" fill="#07110a" font-family="Arial" font-size="13" font-weight="700">ProfileForge</text>`);
+    const vals=state.contributions.map(x=>x.count||0); const max=Math.max(1,...vals); const heatCells=Array.from({length:420},(_,i)=>{const x=45+(i%60)*18,y=68+Math.floor(i/60)*24,n=state.contributions[i]?.count||0;const ratio=n/max;const op=n===0?.06:ratio<.25?.22:ratio<.5?.46:ratio<.75?.7:.95;return `<rect x="${x}" y="${y}" width="14" height="14" rx="3" fill="${t.a}" opacity="${op}"/>`}).join(''); const heat=base(1200,240,`<text x="45" y="42" fill="${t.a}" font-family="Arial" font-size="14" font-weight="700">CONTRIBUTION SIGNAL</text>${heatCells}`);
+    const play=base(1000,320,`<text x="40" y="58" fill="${t.a}" font-family="Arial" font-size="15" font-weight="700">CONTRIBUTION PLAYGROUND</text><text x="40" y="94" fill="#d9e2dc" font-family="Arial" font-size="24" font-weight="700">${esc(template().name)}</text><text x="40" y="124" fill="#8895a2" font-family="Arial" font-size="14">Game-ready visual placeholder generated locally.</text><rect x="40" y="160" width="920" height="110" rx="18" fill="#090d12" stroke="#2a3642"/>${Array.from({length:18},(_,i)=>`<rect x="${65+i*47}" y="${210+((i%3)-1)*12}" width="26" height="12" rx="5" fill="${t.a}" opacity="${0.15+(i%5)*0.15}"/>`).join('')}`);
+    return {'hero.svg':hero,'heatmap.svg':heat,'playground.svg':play, [u+'-heatmap.svg']:heat, [u+'-playground.svg']:play};
+  }
+  function downloadText(name,text,type='text/plain'){const blob=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+  function openExport(){ $('#exportSummary').textContent=`README.md\nassets/${slug(state.username)}-heatmap.svg\nassets/${slug(state.username)}-playground.svg (optional)\n.github/workflows/update-profile.yml (optional)\n\nTemplate: ${template().name}\nTheme: ${themes.find(t=>t.id===state.theme)?.name}\nGoal: ${goals.find(g=>g.id===state.goal)?.name}`; $('#modalBackdrop').classList.remove('hidden') }
+
+  function improve(){
+    const lang=Object.keys(state.languages).slice(0,3); const top=selectedRepos().slice(0,2).map(r=>r.name).join(' and '); state.headline = state.goal==='get-hired'?`Developer focused on ${lang.join(', ')||'software'} · shipping ${top||'useful projects'}.`:state.goal==='open-source'?`Open-source builder focused on ${lang.join(', ')||'software'} and sustainable maintainer workflows.`:`Building products with ${lang.join(', ')||'software'} and turning ideas into shipped work.`; state.about = state.profile?.bio || `I build and iterate in public, with a focus on ${lang.join(', ')||'software'}. Recent work includes ${top||'open repositories and experiments'}.`; $('#headlineInput').value=state.headline; $('#aboutInput').value=state.about; $('#suggestionBox').textContent='Applied a profile-aware headline and about section based on your selected goal and public GitHub signal.'; renderPreview(); renderMarkdown(); persist(); toast('README improved'); }
+
   function bind(){
-    restore(); $('#username').value=CFG.defaultUsername||''; $('#goal').value=state.goal; $('#locale').value=state.locale; $('#glass').checked=state.glass; $('#motion').checked=state.motion; $('#compact').checked=state.compact; $('#supportEnabled').checked=state.support; applyTheme(); renderAll();
-    $('#scanForm').addEventListener('submit',e=>{e.preventDefault();scan($('#username').value)}); $('#demoBtn').onclick=()=>{ $('#username').value=CFG.defaultUsername||'octocat'; scan($('#username').value)}; $('#emptyDemo').onclick=()=>scan(CFG.defaultUsername||'octocat');
-    $$('.rail-tab').forEach(b=>b.onclick=()=>switchPanel(b.dataset.panel)); $$('.mode').forEach(b=>b.onclick=()=>{state.view=b.dataset.mode;$$('.mode').forEach(x=>x.classList.toggle('active',x===b));$('#canvasHeading').textContent=b.dataset.mode==='preview'?'README Preview':b.dataset.mode==='github'?'GitHub-style View':'Generated Markdown';renderPreview()});
-    $('#goal').onchange=e=>{state.goal=e.target.value;state.profileTemplate=e.target.value;const t=TEMPLATES.find(x=>x[0]===state.profileTemplate)||TEMPLATES[0];state.sections=t[3].split(',').map(id=>({id,enabled:true}));renderAll();save()};
-    ['displayName','headline','bio'].forEach(id=>$('#'+id).addEventListener('input',()=>{renderPreview();save()})); $('#locale').onchange=e=>{state.locale=e.target.value;renderPreview();save()}; $('#accent').oninput=e=>{state.accent=e.target.value;applyTheme();renderPreview();save()}; $('#glass').onchange=e=>{state.glass=e.target.checked;document.body.classList.toggle('no-glass',!state.glass);save()}; $('#motion').onchange=e=>{state.motion=e.target.checked;document.body.classList.toggle('no-motion',!state.motion);save()}; $('#compact').onchange=e=>{state.compact=e.target.checked;renderPreview();save()}; $('#supportEnabled').onchange=e=>{state.support=e.target.checked;renderPreview();save()}; $('#outputType').onchange=e=>{renderPreview();save()}; $('#projectRepoSelect').onchange=e=>{state.projectRepo=state.repos.find(r=>String(r.id)===e.target.value)||null;renderPreview();save()};
-    $('#copyMd').onclick=async()=>{const text=$('#outputType')?.value==='project'?projectMarkdown():generateMarkdown(); const ok=await copy(text);toast(ok?'README copied to clipboard':'Copy failed — use Markdown view manually')}; $('#downloadMd').onclick=()=>{const text=$('#outputType')?.value==='project'?projectMarkdown():generateMarkdown(); const blob=new Blob([text],{type:'text/markdown;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=($('#outputType')?.value==='project'?(state.projectRepo?.name||'project'):(state.profile?.login||'profile'))+'-README.md';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);toast('README.md downloaded')};
-    $('#openRepo').onclick=()=>{if(!state.profile){toast('Scan a profile first');return}window.open(`https://github.com/${encodeURIComponent(state.profile.login)}/${encodeURIComponent(state.profile.login)}`,'_blank','noopener')}; $('#copyProfile').onclick=async()=>{if(!state.profile){toast('Scan a profile first');return}const ok=await copy(state.profile.html_url);toast(ok?'Profile URL copied':'Copy failed')}; $('#fullBtn').onclick=()=>$('#canvas').requestFullscreen?.(); $('#themeBtn').onclick=()=>document.body.classList.toggle('light-ui');
+    $('#heroStartBtn').addEventListener('click',()=>{document.querySelector('#studio')?.scrollIntoView({behavior:'smooth'});setTimeout(()=>$('#usernameInput')?.focus(),450)}); $('#scanBtn').addEventListener('click',fetchGitHub); $('#usernameInput').addEventListener('keydown',e=>{if(e.key==='Enter')fetchGitHub()}); $('#sampleBtn').addEventListener('click',()=>{state.username='octocat';$('#usernameInput').value='octocat';fetchGitHub()});
+    $('#headlineInput').addEventListener('input',e=>{state.headline=e.target.value;renderPreview();renderMarkdown();persist()}); $('#aboutInput').addEventListener('input',e=>{state.about=e.target.value;renderPreview();renderMarkdown();persist()}); $('#linksInput').addEventListener('input',e=>{state.links=e.target.value.split(/\n|\|/).map(s=>s.trim()).filter(Boolean);renderPreview();renderMarkdown();persist()});
+    $('#goalGrid').addEventListener('click',e=>{const b=e.target.closest('[data-goal]');if(!b)return;state.goal=b.dataset.goal;setQuery();renderGoalGrid();persist();toast('Goal changed')});
+    $('#templateList').addEventListener('click',e=>{const b=e.target.closest('[data-template]');if(!b)return;state.template=b.dataset.template;state.sections=templates.find(t=>t.id===state.template)?.parts.map(x=>x==='Hero'?'Header':x==='Stack'?'Skills':x==='Portrait'?'About Me':x==='System Scan'?'About Me':x==='Language Mix'?'Skills':x==='Playground'?'Heatmap':x).filter((x,i,a)=>a.indexOf(x)===i) || [...sectionsDefault];state.activeSection=state.sections[0]||'Header';setQuery();renderAll();persist();toast('Template applied')});
+    $('#visualList').addEventListener('click',e=>{const b=e.target.closest('[data-visual]');if(!b)return;const id=b.dataset.visual;state.visuals.has(id)?state.visuals.delete(id):state.visuals.add(id);renderVisualList();renderPreview();renderMarkdown();persist()});
+    $('#themeGrid').addEventListener('click',e=>{const b=e.target.closest('[data-theme]');if(!b)return;state.theme=b.dataset.theme;setQuery();applyTheme();renderThemeGrid();renderPreview();renderMarkdown();persist();toast('Theme changed')});
+    $('#densityControl').addEventListener('click',e=>{const b=e.target.closest('[data-density]');if(!b)return;state.density=b.dataset.density;$$('#densityControl button').forEach(x=>x.classList.toggle('active',x===b));renderPreview();persist()});
+    $$('.toggle-row input').forEach(i=>i.addEventListener('change',()=>{document.body.classList.toggle('no-glass',!$$('[data-effect="glass"]')[0].checked);document.body.classList.toggle('no-glow',!$$('[data-effect="glow"]')[0].checked);document.body.classList.toggle('no-noise',!$$('[data-effect="noise"]')[0].checked);state.effects={glass:$$('[data-effect="glass"]')[0].checked,glow:$$('[data-effect="glow"]')[0].checked,noise:$$('[data-effect="noise"]')[0].checked};persist()}));
+    $$('.tab').forEach(t=>t.addEventListener('click',()=>{state.view=t.dataset.view;updateView();renderMarkdown();}));
+    $$('.panel-tab').forEach(t=>t.addEventListener('click',()=>{$$('.panel-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');$$('.inspector-pane').forEach(x=>x.classList.remove('active'));$('#inspector'+t.dataset.inspector[0].toUpperCase()+t.dataset.inspector.slice(1)).classList.add('active')}));
+    $('#timeline').addEventListener('click',e=>{const item=e.target.closest('[data-section]');if(!item)return;const section=item.dataset.section;const control=e.target.closest('[data-move]');if(!control){state.activeSection=section;$('#editingTitle').textContent=section;renderTimeline();return}const i=state.sections.indexOf(section);if(control.dataset.move==='remove'&&state.sections.length>1)state.sections.splice(i,1);if(control.dataset.move==='up'&&i>0)[state.sections[i-1],state.sections[i]]=[state.sections[i],state.sections[i-1]];if(control.dataset.move==='down'&&i<state.sections.length-1)[state.sections[i+1],state.sections[i]]=[state.sections[i],state.sections[i+1]];state.activeSection=state.sections[Math.max(0,Math.min(i,state.sections.length-1))];renderTimeline();renderPreview();renderMarkdown();persist()});
+    $('#resetSectionsBtn').addEventListener('click',()=>{state.sections=[...sectionsDefault];renderTimeline();renderPreview();renderMarkdown();persist()}); $('#refreshProjectsBtn').addEventListener('click',fetchGitHub); $('#improveBtn').addEventListener('click',improve); $('#copyBtn').addEventListener('click',async()=>{await navigator.clipboard.writeText(buildMarkdown());toast('Markdown copied')}); $('#downloadBtn').addEventListener('click',()=>downloadText('README.md',buildMarkdown(),'text/markdown')); $('#exportBtn').addEventListener('click',openExport); $('#closeModal').addEventListener('click',()=>$('#modalBackdrop').classList.add('hidden')); $('#modalBackdrop').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.add('hidden')});
+    $('#downloadPackageBtn').addEventListener('click',()=>{downloadText('README.md',buildMarkdown(),'text/markdown');const assets=buildAssetSvgs();Object.entries(assets).forEach(([n,c])=>downloadText(n,c,'image/svg+xml'));toast('README + SVG assets downloaded')});
+    $('#downloadActionBtn').addEventListener('click',()=>downloadText('update-profile.yml',workflowText(),'text/yaml')); $('#copyLinkBtn').addEventListener('click',async()=>{setQuery();await navigator.clipboard.writeText(location.href);toast('Studio link copied')});
+    $('#catalogGrid').addEventListener('click',e=>{const b=e.target.closest('[data-template]');if(!b)return;state.template=b.dataset.template;setQuery();renderAll();window.scrollTo({top:0,behavior:'smooth'})});
   }
-  bind();
-  if(new URLSearchParams(location.search).get('demo')==='1') scan(CFG.defaultUsername||'octocat');
+  function workflowText(){return `name: Refresh Profile Assets\n\non:\n  workflow_dispatch:\n  schedule:\n    - cron: '0 3 * * 0'\n\npermissions:\n  contents: write\n\njobs:\n  refresh:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: 20\n      - run: node scripts/build-profile.mjs ${state.username}\n      - name: Commit refreshed assets\n        run: |\n          git config user.name 'github-actions[bot]'\n          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'\n          git add .\n          git commit -m 'chore: refresh profile assets' || exit 0\n          git push\n`}
+
+  function init(){
+    restore(); loadQuery(); $('#usernameInput').value=state.username; bind();
+    $('#catalogGrid').innerHTML=templates.map(t=>`<article class="catalog-card"><div class="catalog-art" style="--grad:linear-gradient(135deg,${t.accent},#0e141b 68%)"><div style="padding:12px;font-size:10px;letter-spacing:.16em;color:rgba(255,255,255,.78)">${esc(t.type)}</div><div style="position:absolute;left:12px;bottom:12px;font-size:20px;font-weight:800">${esc(t.name)}</div></div><h3>${esc(t.name)}</h3><p>${esc(t.desc)}</p><div class="catalog-foot"><small>${t.parts.join(' · ')}</small><button class="use-link" data-template="${t.id}">Use</button></div></article>`).join('');
+    renderAll(); fetchGitHub();
+  }
+  return {init};
 })();
+document.addEventListener('DOMContentLoaded',App.init);

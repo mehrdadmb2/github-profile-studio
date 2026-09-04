@@ -1,0 +1,22 @@
+[
+  {"id":"satan","name":"Satan","accent":"#ff4500","secondary":"#7c2d12","description":"Hellfire aesthetic"},
+  {"id":"neon","name":"Neon","accent":"#38bdf8","secondary":"#06b6d4","description":"Cyberpunk HUD"},
+  {"id":"zen","name":"Zen","accent":"#66bb6a","secondary":"#2f7f46","description":"Japanese garden"},
+  {"id":"github-dark","name":"GitHub Dark","accent":"#58a6ff","secondary":"#1f6feb","description":"Pro standard"},
+  {"id":"dracula","name":"Dracula","accent":"#bd93f9","secondary":"#ff79c6","description":"Coding classic"},
+  {"id":"winter","name":"Winter","accent":"#60a5fa","secondary":"#1e40af","description":"Frozen elegance"},
+  {"id":"spring","name":"Spring","accent":"#ec4899","secondary":"#f9a8d4","description":"Cherry blossom"},
+  {"id":"summer","name":"Summer","accent":"#fbbf24","secondary":"#f59e0b","description":"Golden hour"},
+  {"id":"autumn","name":"Autumn","accent":"#d97706","secondary":"#7c2d12","description":"Falling leaves"},
+  {"id":"christmas","name":"Christmas","accent":"#ef4444","secondary":"#16a34a","description":"Festive spirit"},
+  {"id":"halloween","name":"Halloween","accent":"#f97316","secondary":"#7c3aed","description":"Spooky night"},
+  {"id":"ocean","name":"Ocean","accent":"#38bdf8","secondary":"#0e7490","description":"Deep sea"},
+  {"id":"forest","name":"Forest","accent":"#4ade80","secondary":"#166534","description":"Woodland"},
+  {"id":"sunset","name":"Sunset","accent":"#e879f9","secondary":"#fb7185","description":"Twilight"},
+  {"id":"midnight","name":"Midnight","accent":"#818cf8","secondary":"#312e81","description":"Starry night"},
+  {"id":"aurora","name":"Aurora","accent":"#2dd4bf","secondary":"#8b5cf6","description":"Northern lights"},
+  {"id":"retro","name":"Retro","accent":"#ec4899","secondary":"#22d3ee","description":"Synthwave"},
+  {"id":"minimal","name":"Minimal","accent":"#64748b","secondary":"#334155","description":"Clean and modern"},
+  {"id":"pastel","name":"Pastel","accent":"#a78bfa","secondary":"#f9a8d4","description":"Soft and friendly"},
+  {"id":"matrix","name":"Matrix","accent":"#22c55e","secondary":"#14532d","description":"Code rain"}
+]

@@ -1,0 +1,14 @@
+[
+  {"id":"renaissance","name":"Renaissance","type":"Signature profile","sections":["Header","About Me","Projects","GitHub Stats","Heatmap"]},
+  {"id":"aurora","name":"Aurora","type":"Visual portfolio","sections":["Header","About Me","Skills","Projects","GitHub Stats"]},
+  {"id":"matrix","name":"Matrix","type":"System profile","sections":["Header","About Me","Projects","Skills","Heatmap"]},
+  {"id":"studio","name":"Studio","type":"Product profile","sections":["Header","About Me","Highlights","Projects","GitHub Stats"]},
+  {"id":"dracula","name":"Dracula","type":"Classic dark","sections":["Header","About Me","GitHub Stats","Projects","Connect"]},
+  {"id":"cyber","name":"Cyber","type":"Framework creator","sections":["Header","About Me","Projects","Skills","Heatmap"]},
+  {"id":"jet-runner","name":"Jet Runner","type":"Arcade profile","sections":["Header","Projects","Heatmap","GitHub Stats","Connect"]},
+  {"id":"erased","name":"Erased","type":"Creative profile","sections":["Header","About Me","Heatmap","Highlights","Connect"]},
+  {"id":"snake-trail","name":"Snake Trail","type":"Game profile","sections":["Header","Projects","Heatmap","GitHub Stats","Connect"]},
+  {"id":"space-shooter","name":"Space Shooter","type":"Contribution game","sections":["Header","Projects","Heatmap","GitHub Stats","Connect"]},
+  {"id":"chess-replay","name":"Chess Replay","type":"Strategy profile","sections":["Header","Projects","GitHub Stats","Heatmap","Connect"]},
+  {"id":"frosted","name":"Frosted","type":"Glass portfolio","sections":["Header","About Me","Projects","GitHub Stats","Skills"]}
+]
