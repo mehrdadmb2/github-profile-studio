@@ -1,31 +1,35 @@
-# GitHub Profile Studio
+# GitSkins Studio — README Builder
 
-A GitHub Pages-first profile and README builder inspired by the workflow of modern README studios.
+A self-contained GitHub Pages README/Profile builder inspired by modern README Studio workflows. It is a clean-room implementation of the public interaction model: username scan, goal presets, skin templates, visual library, live preview, section timeline, inspector controls, local autosave, and Markdown export.
 
-Enter a public GitHub username, scan live profile data, choose a profile goal and theme, edit section order, preview the result, and export a ready-to-paste `README.md`.
+## Run on GitHub Pages
 
-## Included
+1. Create a repository named `github-profile-studio` (or any name you like).
+2. Upload `index.html`.
+3. GitHub → Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
+4. Open the generated Pages URL.
 
-- Real GitHub public REST API integration
-- Profile scanning with repository pagination
-- Live repository stars, forks and language signals
-- 8 profile README templates
-- 5 project README template references
-- 8 visual themes
-- Live Preview / GitHub-style / Markdown modes
-- Section timeline with reorder controls
-- Local autosave
-- Copy and download Markdown
-- Optional support / donation section
-- Responsive glass interface
-- GitHub Pages ready — no backend or build step
+No Node.js, build step, API key, or backend is required.
 
-## Publish
+## Public data
 
-See [SETUP.md](SETUP.md).
+The app reads public profile/repository data from the GitHub REST API in the visitor's browser. Contribution history is optionally read from `github-contributions-api.jogruber.de` because GitHub's REST API does not expose the profile contribution graph directly. Both sources are public; the contribution service documents hourly caching and rate limits.
 
-## Suggested repository metadata
+## Included studio surface
 
-**Name:** `github-profile-studio`
+- Profile / Visuals / Links navigation
+- 20 skin themes matching the public GitSkins theme catalogue names and accent palette
+- 7 README goals
+- 9 README sections + optional Streak/Support
+- Visual library: Hero, 3D Wordmark, ASCII Portrait, Chess, Space Shooter, Snake Trail, Erased, Jet Runner, Contribution Streak
+- Live Preview / GitHub view / Markdown view
+- Section reorder/remove/add controls
+- Content / Style / Agent inspector tabs
+- Local autosave via `localStorage`
+- Downloadable `README.md`
+- Copy-to-clipboard export
+- Responsive layout for desktop/tablet/mobile
 
-**Description:** `Premium GitHub profile & README builder with live public profile data, themes, templates and Markdown export.`
+## Important
+
+This project intentionally does not copy Gitskins' private source code or proprietary assets. It recreates the public information architecture, interaction patterns, theme names/palette, and studio-style workflow as a clean-room implementation.
