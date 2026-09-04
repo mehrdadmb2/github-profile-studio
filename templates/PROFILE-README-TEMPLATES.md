@@ -1,118 +1,35 @@
 # Profile README Template Library
 
-The Studio includes eight profile presets. Each preset is intentionally short enough to work on GitHub while still giving the visitor a strong first-screen hierarchy.
+The live Studio includes these structures and populates them from a public GitHub profile.
 
-## 1. Showcase
+## Showcase
 
-```md
-<div align="center">
+Best for a complete personal brand: identity → about → proof → projects → stack → stats → contact.
 
-# YOUR NAME
+## Recruiter-ready
 
-**YOUR ROLE · YOUR FOCUS · YOUR DIFFERENTIATOR**
+Best for hiring: identity → measurable proof → selected work → stack → contact.
 
-One sharp sentence describing what you build and why.
+## Open-source
 
-</div>
+Best for maintainers: identity → context → projects → open-source invitation → stack → contact.
 
-## About
+## Technical authority
 
-Tell the reader what you build, who it helps, and what you are exploring now.
+Best for architecture-heavy profiles: identity → proof → projects → stack → terminal → contact.
 
-## Featured work
+## Student / learning
 
-- [Project One](URL) — what it does and why it matters.
-- [Project Two](URL) — what it does and why it matters.
-- [Project Three](URL) — what it does and why it matters.
+Best for learning in public: identity → about → projects → learning journey → stack → contact.
 
-## Stack
+## Terminal
 
-`Python` `TypeScript` `C/C++` `Docker` `GitHub Actions`
+Neofetch-inspired: identity → terminal → proof → projects → stack → contact.
 
-## GitHub stats
+## Minimal
 
-![Stats](https://github-readme-stats.vercel.app/api?username=YOUR_USERNAME&show_icons=true&hide_border=true)
+Small and focused: identity → projects → contact.
 
-## Connect
+## Cinematic
 
-[GitHub](https://github.com/YOUR_USERNAME) · [Portfolio](URL) · [LinkedIn](URL)
-```
-
-## 2. Recruiter-ready
-
-Lead with role + proof. Keep the page highly scannable.
-
-```md
-# YOUR NAME
-**TARGET ROLE · CORE SPECIALTY**
-
-I build ...
-
-## Selected impact
-- Outcome / scale / responsibility
-- Outcome / scale / responsibility
-
-## Selected projects
-- Project — result — stack
-- Project — result — stack
-
-## Skills
-Frontend · Backend · Cloud · Data · Automation
-
-## Contact
-Portfolio · GitHub · Email
-```
-
-## 3. Open Source
-
-```md
-# YOUR NAME
-Open-source maintainer building useful developer tooling.
-
-## What I maintain
-- Project One
-- Project Two
-
-## How to contribute
-Issues → Discussion → Pull Request
-
-## Current focus
-What you are maintaining, learning, or shipping.
-```
-
-## 4. Terminal
-
-```md
-```text
-$ whoami
-YOUR_USERNAME
-
-$ focus
-Software · IoT · Automation
-
-$ ls featured/
-project-one  project-two  project-three
-```
-
-## Projects
-...
-
-## Stack
-...
-```
-
-## 5. Technical Authority
-
-Use when architecture, engineering depth, and systems thinking matter more than personality.
-
-## 6. Student Journey
-
-Use education + learning + experiments as the narrative instead of trying to look senior.
-
-## 7. Minimal
-
-One headline, three projects, one stack line, one contact row.
-
-## 8. Cinematic
-
-Use when the visual system and generated SVG assets are a major part of your GitHub identity.
+Visual-first: identity → about → projects → stats → contact.

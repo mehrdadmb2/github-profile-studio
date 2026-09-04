@@ -1,37 +1,59 @@
-# Setup & Customization
+# Setup & Publish
 
-## 1. Upload
+## 1. Create the repository
 
-Upload the package exactly as provided. Do not move `data/`, `css/`, `js/` or `assets/` into different directories unless you also update the import paths.
+Recommended repository name:
 
-## 2. GitHub Pages
+`github-profile-studio`
 
-Enable Pages from the `main` branch and repository root.
+Short description:
 
-## 3. Default profile
+> Premium GitHub profile & README builder with live public profile data, themes, templates and Markdown export.
 
-Open `data/config.js` and update `defaultUsername`.
+## 2. Upload
 
-## 4. Donation addresses
+Upload the contents of this folder to the `main` branch.
 
-The supplied config contains the public donation addresses currently shown in the referenced portfolio. Verify every address and network before publishing.
+No Node.js, npm, build command, server, database or secret is required.
 
-## 5. Adding a template
+## 3. Enable GitHub Pages
 
-Add an object to `data/templates.js`:
+Open:
 
-```js
-{ id:'my-template', name:'My Template', desc:'What it is for', sections:['hero','about','projects','stack','connect'] }
+`Settings → Pages → Build and deployment → Deploy from a branch → main → / (root) → Save`
+
+## 4. Customize the default profile
+
+Edit `js/config.js`:
+
+- `defaultUsername`
+- donation wallet addresses
+- donation default behavior
+
+The donation addresses included in the default configuration are the public addresses from the existing Mehrdad portfolio. Verify every address and network before publishing.
+
+## 5. What the app does
+
+1. User enters a public GitHub username.
+2. Browser calls GitHub's public REST API.
+3. Profile and up to 300 repositories are loaded.
+4. Repository stars and language signals are computed locally.
+5. The template and theme are rendered in the live preview.
+6. The final README is generated locally.
+7. User can copy or download `README.md`.
+
+## Troubleshooting
+
+### GitHub API rate limit
+
+The app shows the public API remaining quota in the scan card. Retry later if the quota is exhausted.
+
+### CORS / local testing
+
+GitHub API supports browser access to these public endpoints. For consistent local testing, serve the folder over HTTP instead of opening `index.html` directly, for example:
+
+```bash
+python -m http.server 8080
 ```
 
-The renderer already knows the available section IDs.
-
-## 6. Adding a theme
-
-Add a theme object to `data/themes.js`:
-
-```js
-{ id:'my-theme', name:'My Theme', accent:'#7c5cff', accent2:'#26d9ff', bg:'#080b14' }
-```
-
-The UI automatically creates a theme swatch.
+then open `http://localhost:8080`.
