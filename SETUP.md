@@ -1,24 +1,107 @@
-# ProfileForge Setup
+# راهنمای نصب و انتشار ProfileForge
 
-## GitHub Pages
-1. Create a public repository, recommended name: `github-profile-studio`.
-2. Upload the contents of this folder to `main`.
-3. Settings → Pages → Deploy from a branch → `main` / `/root`.
-4. Open the generated Pages URL.
+این نسخه کاملاً استاتیک است؛ برای اجرای خود استودیو به دیتابیس، Worker، توکن GitHub، Node.js یا نصب پکیج نیاز نداری. مرورگر، اطلاعات عمومی GitHub را مستقیم دریافت می‌کند و پیش‌نویس را در Local Storage نگه می‌دارد.
 
-## Generator usage
-1. Enter any public GitHub username.
-2. Click scan.
-3. Choose a goal, template, theme and visuals.
-4. Edit the headline, about text, links and project selection.
-5. Use Preview / GitHub view / Markdown tabs.
-6. Download README.md and the SVG assets needed by your selected visual system.
+## ۱) جایگزینی فایل‌های ریپازیتوری
 
-## Profile README publishing
-Create a repository whose name exactly matches the target GitHub username. Place the generated `README.md` at the repository root. Upload the downloaded `assets/` files too.
+1. ZIP پروژه را Extract کن.
+2. فایل‌ها و پوشه‌های داخل آرشیو را انتخاب کن؛ `index.html` و پوشه‌های `assets`، `css`، `data`، `js`، `scripts` و `.github` باید مستقیماً در ریشه ریپازیتوری قرار بگیرند.
+3. همهٔ محتویات آرشیو را در ریشه ریپازیتوری GitHub آپلود و فایل‌های قبلی را Replace کن.
+4. مطمئن شو فایل‌ها داخل یک پوشهٔ اضافه قرار نگرفته باشند. مسیر درست باید شبیه این باشد:
 
-## Optional automation
-The included `.github/workflows/update-profile.yml` refreshes the contribution asset and rewrites a compact snapshot README weekly. Customize `scripts/build-profile.mjs` to preserve your hand-written README sections instead of overwriting the file.
+```text
+repository-root/
+├── index.html
+├── 404.html
+├── .nojekyll
+├── README.md
+├── SETUP.md
+├── assets/
+├── css/
+├── data/
+├── js/
+├── scripts/
+└── .github/workflows/
+```
 
-## Important GitHub API note
-The studio uses the unauthenticated public GitHub REST API from the browser. Heavy usage can hit the public rate limit. For large deployments, add a server-side cache or GitHub App.
+## ۲) فعال‌سازی GitHub Pages
+
+1. در GitHub وارد ریپازیتوری شو.
+2. به `Settings → Pages` برو.
+3. در قسمت Build and deployment گزینه `Deploy from a branch` را انتخاب کن.
+4. شاخه `main` و مسیر `/(root)` را انتخاب و Save کن.
+5. آدرس Pages را باز کن. بار اول ممکن است چند لحظه برای انتشار GitHub زمان لازم باشد.
+
+## ۳) تنظیم مالک و آدرس پروژه
+
+فایل `data/config.js` را باز کن و مقادیر زیر را مطابق ریپازیتوری خودت تنظیم کن:
+
+```js
+window.PF_CONFIG = {
+  brand: 'ProfileForge',
+  defaultUsername: 'YOUR_GITHUB_USERNAME',
+  repositoryUrl: 'https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY',
+  pagesUrl: 'https://YOUR_GITHUB_USERNAME.github.io/YOUR_REPOSITORY/',
+  // سایر تنظیمات را حفظ کن.
+};
+```
+
+فقط همین چهار مقدار را تغییر بده؛ بخش `api` و `limits` را حذف نکن.
+
+## ۴) اجرای آزمایشی روی ویندوز
+
+به‌خاطر محدودیت امنیتی مرورگر، باز کردن مستقیم `index.html` با آدرس `file://` برای درخواست GitHub API مناسب نیست. در ویندوز، اگر Python نصب است، در پوشه پروژه PowerShell را باز و اجرا کن:
+
+```powershell
+python -m http.server 8080
+```
+
+سپس در مرورگر برو به `http://localhost:8080`.
+
+## ۵) استفاده از استودیو
+
+1. نام کاربری GitHub را وارد و دکمه اسکن را بزن.
+2. هدف پروفایل و Template را انتخاب کن.
+3. از تب Profile اطلاعات، شبکه‌های اجتماعی، مهارت‌ها، سوابق و دستاوردها را اصلاح کن.
+4. در بخش Featured repositories پروژه‌های دلخواه را انتخاب کن؛ ترتیب انتخاب روی ترتیب خروجی اثر دارد.
+5. در تب Style تم و تراکم محتوا را تغییر بده.
+6. در بخش Content Architecture ترتیب بخش‌ها را با فلش‌ها جابه‌جا، حذف یا اضافه کن.
+7. از Preview، GitHub view و Markdown برای بازبینی خروجی استفاده کن.
+8. دکمه Export ZIP یک بسته شامل README، فایل‌های SVG، JSON قابل ویرایش و فایل‌های اتوماسیون اختیاری می‌سازد.
+
+## ۶) انتشار README در پروفایل GitHub
+
+1. یک ریپازیتوری Public بساز که نامش دقیقاً برابر نام کاربری GitHub باشد؛ مثلاً برای `mehrdadmb2` نام ریپازیتوری باید `mehrdadmb2` باشد.
+2. ZIP خروجی ProfileForge را باز کن.
+3. `README.md` و پوشه `assets` را به ریشه همان ریپازیتوری منتقل کن.
+4. Commit و Push کن. README به‌صورت خودکار در صفحه پروفایل GitHub نمایش داده می‌شود.
+5. فایل `profileforge-draft.json` نسخه قابل ویرایش پیش‌نویس است و لازم نیست در ریپازیتوری عمومی قرار بگیرد؛ بهتر است آن را به‌عنوان نسخه پشتیبان شخصی نگه داری.
+
+## ۷) اتوماسیون Contribution Heatmap (اختیاری)
+
+در ZIP خروجی، این دو فایل وجود دارند:
+
+- `scripts/refresh-profile.mjs`
+- `.github/workflows/refresh-profile-assets.yml`
+
+برای فعال‌کردن:
+
+1. هر دو را به مسیرهای متناظر در ریپازیتوری پروفایل منتقل کن.
+2. وارد تب `Actions` همان ریپازیتوری شو.
+3. Workflow با نام `Refresh contribution asset` را انتخاب و `Run workflow` را اجرا کن.
+4. این Workflow به‌صورت هفتگی هم اجرا می‌شود و فقط SVG مربوط به Contribution را به‌روزرسانی می‌کند؛ README.md را بازنویسی یا حذف نمی‌کند.
+
+## ۸) محدودیت‌ها و رفع اشکال
+
+- **خطای 403 یا Rate limit:** GitHub برای درخواست‌های عمومی بدون ورود محدودیت ساعتی دارد. تا زمان Reset صبر کن و دوباره اسکن کن. استودیو بدون اسکن هم قابل استفاده است و می‌توان اطلاعات را دستی وارد کرد.
+- **Contribution خالی:** داده تقویم از یک سرویس عمومی جداگانه دریافت می‌شود. اگر در دسترس نباشد، سایر اطلاعات و خروجی همچنان ساخته می‌شوند.
+- **پیش‌نمایش خالی:** بررسی کن `data/config.js` و `data/catalog.js` قبل از `js/app.js` بارگذاری شوند و مسیر فایل‌ها دقیقاً مطابق ساختار بالا باشد.
+- **نمایش‌ندادن Pages:** مطمئن شو `index.html` در ریشه شاخه‌ای است که در Settings → Pages انتخاب کرده‌ای؛ پوشه پروژه را یک سطح اضافه داخل ریپازیتوری قرار نده.
+- **بازیابی پیش‌نویس:** در تب Tools از Export editable JSON استفاده کن. روی دستگاه دیگر JSON را Import کن.
+
+## ۹) امنیت و حریم خصوصی
+
+- هیچ GitHub Token یا رمز عبوری در کد پروژه وجود ندارد.
+- اطلاعات و متن‌هایی که در فیلدهای پروفایل وارد می‌کنی در مرورگر فعلی ذخیره می‌شوند.
+- لینک Share فقط نام کاربری، هدف، تم و قالب را منتقل می‌کند؛ متن کامل بیو و اطلاعات تماس را داخل URL قرار نمی‌دهد.
+- اطلاعاتی را که نمی‌خواهی عمومی شود در README وارد نکن؛ خروجی برای انتشار عمومی طراحی شده است.

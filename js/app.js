@@ -1,188 +1,929 @@
-const App = (() => {
-  const $ = (s, r=document) => r.querySelector(s);
-  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
-  const esc = (v='') => String(v).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const mdEsc = (v='') => String(v).replace(/\[/g,'\\[').replace(/\]/g,'\\]').replace(/_/g,'\\_');
-  const formatNum = n => Intl.NumberFormat('en',{notation:n>9999?'compact':'standard',maximumFractionDigits:1}).format(n||0);
-  const slug = s => String(s||'profileforge').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+/* ProfileForge v3 — no framework, no backend, no required API keys. */
+(() => {
+  'use strict';
 
-  const themes = [
-    ['Satan','#ff4500','#7c2d12'],['Neon','#38bdf8','#06b6d4'],['Zen','#66bb6a','#2f7f46'],['GitHub Dark','#58a6ff','#1f6feb'],['Dracula','#bd93f9','#ff79c6'],
-    ['Winter','#60a5fa','#1e40af'],['Spring','#ec4899','#f9a8d4'],['Summer','#fbbf24','#f59e0b'],['Autumn','#d97706','#7c2d12'],['Christmas','#ef4444','#16a34a'],
-    ['Halloween','#f97316','#7c3aed'],['Ocean','#38bdf8','#0e7490'],['Forest','#4ade80','#166534'],['Sunset','#e879f9','#fb7185'],['Midnight','#818cf8','#312e81'],
-    ['Aurora','#2dd4bf','#8b5cf6'],['Retro','#ec4899','#22d3ee'],['Minimal','#64748b','#334155'],['Pastel','#a78bfa','#f9a8d4'],['Matrix','#22c55e','#14532d']
-  ].map(([name,a,b])=>({name,a,b,id:slug(name)}));
-  const goals = [
-    ['Get Hired','Proof + clarity'],['Open Source','Maintainer trust'],['Freelance','Services + outcomes'],['Founder','Product story'],['Student','Learning trajectory'],['Personal Brand','Distinct identity']
-  ].map(([name,sub])=>({name,sub,id:slug(name)}));
-  const visuals = [
-    ['Hero card','signature hero'],['Portrait','avatar portrait'],['Wordmark','typographic identity'],['System scan','technical signal'],['Stats grid','impact metrics'],['Language mix','technology breakdown'],['Projects','featured work'],['Heatmap','contribution signal'],['Social row','contact links'],['Contribution game','playground'],
-  ].map(([name,sub])=>({name,sub,id:slug(name)}));
-  const sectionsDefault = ['Header','About Me','Skills','GitHub Stats','Projects','Connect','Streak','Highlights','Heatmap'];
-  const templates = [
-    {id:'renaissance',name:'Renaissance',type:'Signature profile',accent:'#eab308',desc:'Editorial profile with a crafted hero, wordmark and story-led sections.',parts:['Hero','Wordmark','Projects','Stats','Heatmap']},
-    {id:'aurora',name:'Aurora',type:'Visual portfolio',accent:'#2dd4bf',desc:'Luminous profile with portrait, stack, projects and signal widgets.',parts:['Hero','Portrait','Wordmark','Stack','Projects']},
-    {id:'matrix',name:'Matrix',type:'System profile',accent:'#22c55e',desc:'Technical HUD with scan readouts, stack bars and activity.',parts:['Hero','System Scan','Projects','Stack','Heatmap']},
-    {id:'studio',name:'Studio',type:'Product profile',accent:'#38bdf8',desc:'Balanced product-engineering layout with highlights and metrics.',parts:['Hero','Portrait','Highlights','Projects','Stats']},
-    {id:'dracula',name:'Dracula',type:'Classic dark',accent:'#bd93f9',desc:'Dark coding aesthetic with wordmark, portrait and social details.',parts:['Hero','Wordmark','Portrait','Stats','Social']},
-    {id:'cyber',name:'Cyber',type:'Framework creator',accent:'#22d3ee',desc:'High-contrast cyber layout focused on system scan and technology.',parts:['Hero','System Scan','Projects','Stack','Heatmap']},
-    {id:'jet-runner',name:'Jet Runner',type:'Arcade profile',accent:'#f97316',desc:'Energetic arcade treatment built around projects and contributions.',parts:['Hero','Projects','Playground','Stats','Social']},
-    {id:'erased',name:'Erased',type:'Creative profile',accent:'#f8fafc',desc:'Monochrome editorial profile with portrait and contribution signal.',parts:['Hero','Portrait','Heatmap','Highlights','Social']},
-    {id:'snake-trail',name:'Snake Trail',type:'Game profile',accent:'#84cc16',desc:'Contribution-first game aesthetic with streak and projects.',parts:['Hero','Projects','Heatmap','Stats','Social']},
-    {id:'space-shooter',name:'Space Shooter',type:'Contribution game',accent:'#60a5fa',desc:'Your contribution history becomes a playful visual playground.',parts:['Hero','Projects','Playground','Stats','Social']},
-    {id:'chess-replay',name:'Chess Replay',type:'Strategy profile',accent:'#f59e0b',desc:'A strategy-inspired identity with replay panel, projects and stats.',parts:['Hero','Playground','Projects','Stats','Heatmap','Social']},
-    {id:'frosted',name:'Frosted',type:'Glass portfolio',accent:'#67e8f9',desc:'Soft cinematic glass system inspired by modern profile showcases.',parts:['Hero','Portrait','Projects','Stats','Language Mix']}
-  ];
-
-  const state = {
-    username:'octocat', profile:null, repos:[], languages:{}, selectedRepos:[], contributions:[], template:'studio', theme:'github-dark', goal:'get-hired', density:'balanced', view:'preview', activeSection:'Header', sections:[...sectionsDefault], headline:'Developer building useful things in public.', about:'A GitHub profile generated from public work, repositories, language signal and activity. Edit this story to make the profile sound like you.', links:['GitHub'], effects:{glass:true,glow:true,noise:true}, visuals:new Set(['hero-card','portrait','stats-grid','language-mix','projects','heatmap','social-row'])
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const CFG = window.PF_CONFIG || {};
+  const CATALOG = window.PF_CATALOG || {};
+  const THEMES = CATALOG.themes || [];
+  const GOALS = CATALOG.goals || [];
+  const TEMPLATES = CATALOG.templates || [];
+  const SECTIONS = CATALOG.sections || [];
+  const STORAGE_KEY = CFG.storageKey || 'profileforge:v3';
+  const DEFAULT_SECTIONS = ['hero', 'about', 'highlights', 'skills', 'projects', 'stats', 'activity', 'connect'];
+  const DEFAULT_STATE = {
+    version: 3,
+    username: CFG.defaultUsername || 'octocat',
+    profile: null,
+    repos: [],
+    languages: {},
+    contributions: [],
+    selectedRepos: [],
+    goal: 'hired',
+    template: 'aurora',
+    theme: 'aurora',
+    view: 'preview',
+    sections: [...DEFAULT_SECTIONS],
+    density: 'balanced',
+    settings: { showAvatar: true, showBadges: true, showStats: true, glass: true, glow: true, motion: true },
+    content: {
+      name: '', headline: '', about: '', location: '', company: '', website: '', email: '',
+      links: [], skills: [], experience: '', education: '', achievements: '', support: ''
+    }
   };
+  let state = structuredCloneSafe(DEFAULT_STATE);
+  let toastTimer = null;
+  let scanController = null;
+  let scanSequence = 0;
 
-  function persist(){localStorage.setItem('pf-state', JSON.stringify({...state, visuals:[...state.visuals]}));}
-  function restore(){try{const raw=localStorage.getItem('pf-state');if(!raw)return;const s=JSON.parse(raw);Object.assign(state,s,{visuals:new Set(s.visuals||[])});}catch{}}
-  function setQuery(){const u=new URL(location.href);u.searchParams.set('username',state.username);u.searchParams.set('template',state.template);u.searchParams.set('theme',state.theme);u.searchParams.set('goal',state.goal);history.replaceState({},'',u)}
-  function loadQuery(){const u=new URL(location.href); if(u.searchParams.get('username'))state.username=u.searchParams.get('username'); if(u.searchParams.get('template'))state.template=u.searchParams.get('template'); if(u.searchParams.get('theme'))state.theme=u.searchParams.get('theme'); if(u.searchParams.get('goal'))state.goal=u.searchParams.get('goal')}
-  function applyTheme(){const t=themes.find(x=>x.id===state.theme)||themes[3];document.documentElement.style.setProperty('--accent',t.a);document.documentElement.style.setProperty('--accent-rgb',hexToRgb(t.a));document.documentElement.style.setProperty('--accent2',t.b);}
-  function hexToRgb(hex){const n=hex.replace('#','');return `${parseInt(n.slice(0,2),16)},${parseInt(n.slice(2,4),16)},${parseInt(n.slice(4,6),16)}`}
-  function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200)}
-
-  async function fetchGitHub(){
-    const u=state.username.trim().replace(/^@/,'');
-    if(!/^[a-zA-Z0-9-]{1,39}$/.test(u)){toast('Enter a valid GitHub username');return false}
-    $('#scanStatus').textContent='Scanning public profile…';
-    try{
-      const profileRes=await fetch(`https://api.github.com/users/${encodeURIComponent(u)}`,{headers:{Accept:'application/vnd.github+json'}});
-      if(!profileRes.ok) throw new Error(profileRes.status===404?'GitHub user not found':'GitHub API error');
-      const profile=await profileRes.json(); state.profile=profile; state.username=profile.login;
-      const repos=[]; let page=1;
-      while(page<=3){
-        const r=await fetch(`https://api.github.com/users/${encodeURIComponent(u)}/repos?per_page=100&page=${page}&sort=updated&direction=desc`,{headers:{Accept:'application/vnd.github+json'}}); if(!r.ok)break; const arr=await r.json(); repos.push(...arr); if(arr.length<100)break; page++;
+  function structuredCloneSafe(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+  function escapeHtml(value = '') {
+    return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+  }
+  function escapeXml(value = '') {
+    return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[char]));
+  }
+  function escapeMarkdown(value = '') {
+    return String(value).replace(/\\/g, '\\\\').replace(/([`*_{}\[\]()#+.!|>])/g, '\\$1');
+  }
+  function formatNumber(value) {
+    const number = Number(value) || 0;
+    return new Intl.NumberFormat('en-US', { notation: number >= 10000 ? 'compact' : 'standard', maximumFractionDigits: 1 }).format(number);
+  }
+  function slug(value = '') {
+    return String(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'profile';
+  }
+  function theme() { return THEMES.find(item => item.id === state.theme) || THEMES[0]; }
+  function template() { return TEMPLATES.find(item => item.id === state.template) || TEMPLATES[0]; }
+  function section(id) { return SECTIONS.find(item => item.id === id) || { id, name: id, icon: '✦', desc: '' }; }
+  function toast(message) {
+    const node = $('#toast');
+    if (!node) return;
+    node.textContent = message;
+    node.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => node.classList.remove('show'), 2600);
+  }
+  function setScanState(status, message) {
+    const indicator = $('#apiIndicator');
+    indicator?.classList.remove('loading', 'success', 'error');
+    if (status) indicator?.classList.add(status);
+    if ($('#scanStatus')) $('#scanStatus').textContent = message;
+  }
+  function persist() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      $('#workspaceStatus') && ($('#workspaceStatus').textContent = 'Draft saved locally');
+    } catch (error) {
+      console.warn('ProfileForge could not persist the draft:', error);
+      $('#workspaceStatus') && ($('#workspaceStatus').textContent = 'Local storage unavailable');
+    }
+  }
+  function restore() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      if (!saved || typeof saved !== 'object') return;
+      state = {
+        ...structuredCloneSafe(DEFAULT_STATE),
+        ...saved,
+        settings: { ...DEFAULT_STATE.settings, ...(saved.settings || {}) },
+        content: sanitizeContent(saved.content || {}),
+        sections: Array.isArray(saved.sections) ? saved.sections.filter(id => SECTIONS.some(s => s.id === id)) : [...DEFAULT_SECTIONS],
+        repos: Array.isArray(saved.repos) ? saved.repos.filter(item => item && typeof item.full_name === 'string') : [],
+        selectedRepos: Array.isArray(saved.selectedRepos) ? saved.selectedRepos.filter(item => typeof item === 'string') : [],
+        contributions: Array.isArray(saved.contributions) ? saved.contributions.filter(item => item && item.date) : [],
+        languages: saved.languages && typeof saved.languages === 'object' ? saved.languages : {},
+        username: typeof saved.username === 'string' && /^[a-zA-Z0-9-]{1,39}$/.test(saved.username) ? saved.username : DEFAULT_STATE.username,
+        goal: GOALS.some(item => item.id === saved.goal) ? saved.goal : DEFAULT_STATE.goal,
+        template: TEMPLATES.some(item => item.id === saved.template) ? saved.template : DEFAULT_STATE.template,
+        theme: THEMES.some(item => item.id === saved.theme) ? saved.theme : DEFAULT_STATE.theme,
+        view: ['preview', 'github', 'markdown'].includes(saved.view) ? saved.view : 'preview',
+        density: ['compact', 'balanced', 'spacious'].includes(saved.density) ? saved.density : 'balanced'
+      };
+    } catch (error) {
+      console.warn('ProfileForge draft could not be restored:', error);
+    }
+  }
+  function applyQuery() {
+    const params = new URLSearchParams(location.search);
+    const username = params.get('username');
+    const templateId = params.get('template');
+    const themeId = params.get('theme');
+    const goalId = params.get('goal');
+    if (username && /^[a-zA-Z0-9-]{1,39}$/.test(username)) {
+      if (state.profile?.login && state.profile.login.toLowerCase() !== username.toLowerCase()) {
+        state.profile = null; state.repos = []; state.languages = {}; state.contributions = []; state.selectedRepos = [];
       }
-      state.repos=repos.filter(r=>!r.fork);
-      try {
-        const c=await fetch(`https://github-contributions-api.jogruber.de/v4/${encodeURIComponent(u)}?y=last`);
-        if(c.ok){const cj=await c.json(); state.contributions=Array.isArray(cj.contributions)?cj.contributions:[];}
-      } catch { state.contributions=[]; }
-      const langs={}; state.repos.slice(0,60).forEach(r=>Object.entries(r.language?{[r.language]:1}:{}).forEach(([k,v])=>langs[k]=(langs[k]||0)+v)); state.languages=langs;
-      const ranked=[...state.repos].sort((a,b)=>(b.stargazers_count+b.forks_count)-(a.stargazers_count+a.forks_count)).slice(0,6); state.selectedRepos=ranked.map(r=>r.full_name);
-      state.headline=inferHeadline(); state.about=inferAbout();
-      $('#scanStatus').textContent=`Loaded ${state.repos.length} public repositories.`; toast('Profile scanned');
-      persist(); setQuery(); renderAll(); return true;
-    }catch(e){$('#scanStatus').textContent=e.message;toast(e.message);return false}
+      state.username = username;
+    }
+    if (TEMPLATES.some(item => item.id === templateId)) state.template = templateId;
+    if (THEMES.some(item => item.id === themeId)) state.theme = themeId;
+    if (GOALS.some(item => item.id === goalId)) state.goal = goalId;
   }
-
-  function inferHeadline(){
-    const langs=Object.entries(state.languages).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k).join(' · ');
-    const topics=[...state.repos.flatMap(r=>r.topics||[])].slice(0,4);
-    if(topics.length)return `Building ${topics.slice(0,2).join(' + ')} with ${langs||'code'}.`;
-    return `Building useful things in ${langs||'code'} and sharing the journey.`;
+  function writeQuery() {
+    const url = new URL(location.href);
+    url.searchParams.set('username', state.username || '');
+    url.searchParams.set('template', state.template);
+    url.searchParams.set('theme', state.theme);
+    url.searchParams.set('goal', state.goal);
+    history.replaceState({}, '', url);
   }
-  function inferAbout(){
-    const p=state.profile||{}; const role=p.bio||'Developer profile generated from public GitHub work.'; return role;
+  function applyTheme() {
+    const selected = theme();
+    const root = document.documentElement;
+    root.dataset.theme = selected.id;
+    root.style.setProperty('--bg', selected.bg);
+    root.style.setProperty('--surface', selected.surface);
+    root.style.setProperty('--accent', selected.a);
+    root.style.setProperty('--accent-2', selected.b);
+    root.style.setProperty('--text', selected.text);
+    root.style.setProperty('--muted', selected.muted);
+    $('meta[name="theme-color"]')?.setAttribute('content', selected.bg);
+    document.body.classList.toggle('no-glass', !state.settings.glass);
+    document.body.classList.toggle('no-glow', !state.settings.glow);
+    document.body.classList.toggle('no-motion', !state.settings.motion);
   }
-
-  function githubContributionGrid(){
-    const vals=state.contributions.map(x=>x.count||0); const max=Math.max(1,...vals);
-    const cells=Array.from({length:168},(_,i)=>{const n=state.contributions[i]?.count||0; const ratio=n/max; const c=n===0?'':ratio<.25?'on1':ratio<.5?'on2':ratio<.75?'on3':'on4'; return `<i class="heat-cell ${c}" title="${n} contributions"></i>`});
-    return cells.join('');
+  function setDefaultContentFromProfile(profile, force = false) {
+    const c = state.content;
+    const canFill = key => force || !String(c[key] || '').trim();
+    if (canFill('name')) c.name = profile.name || profile.login || '';
+    if (canFill('about')) c.about = profile.bio || '';
+    if (canFill('location')) c.location = profile.location || '';
+    if (canFill('company')) c.company = profile.company || '';
+    if (canFill('website')) c.website = profile.blog || '';
+    if (canFill('headline')) c.headline = inferHeadline();
+    if (!c.links.length) c.links = [{ label: 'GitHub', url: `https://github.com/${profile.login}` }];
   }
-  function selectedRepos(){
-    const chosen=state.repos.filter(r=>state.selectedRepos.includes(r.full_name));
-    return chosen.length?chosen.slice(0,4):state.repos.slice(0,4);
+  function inferHeadline() {
+    const languages = Object.entries(state.languages).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([name]) => name);
+    const byGoal = {
+      hired: `Software developer focused on ${languages.join(' and ') || 'building reliable software'}.`,
+      opensource: `Open-source contributor building useful tools with ${languages.join(' and ') || 'modern technology'}.`,
+      freelance: `Independent developer turning complex ideas into practical digital products.`,
+      founder: `Product-minded builder turning ideas into useful, scalable software.`,
+      student: `Computer science learner sharing projects, experiments and progress in public.`,
+      research: `Exploring software, systems and applied technology through hands-on research.`,
+      creator: `Creative technologist blending software, design and experimentation.`,
+      general: `Developer building useful things and learning in public.`
+    };
+    return byGoal[state.goal] || byGoal.general;
   }
-  function template(){return templates.find(t=>t.id===state.template)||templates[3]}
-  function renderPreview(){
-    const p=state.profile||{login:state.username,name:state.username,bio:'Developer profile generated from public GitHub work.',avatar_url:'assets/avatar-placeholder.svg',followers:0,following:0,public_repos:state.repos.length};
-    const langs=Object.entries(state.languages).sort((a,b)=>b[1]-a[1]).slice(0,5); const total=langs.reduce((a,[,v])=>a+v,0)||1;
-    const repos=selectedRepos(); const tech=langs.length?langs:['JavaScript', 'TypeScript', 'Python'].map(x=>[x,1]);
-    const metricCards=[['STARS',state.repos.reduce((s,r)=>s+r.stargazers_count,0)],['REPOS',p.public_repos||state.repos.length],['FOLLOWERS',p.followers||0],['CONTRIB','LIVE*']];
-    const sectionByName=name=>state.sections.includes(name);
-    const projectHtml=repos.map(r=>`<article class="project-card"><h4>${esc(r.name)}</h4><p>${esc(r.description||'Public project with no description yet.')}</p><div class="project-meta"><span>★ ${formatNum(r.stargazers_count)}</span><span>⑂ ${formatNum(r.forks_count)}</span><span>${esc(r.language||'Code')}</span></div></article>`).join('');
-    const statRows=tech.map(([n,v],i)=>`<div class="bar-line"><span>${esc(n)}</span><div class="bar"><i style="width:${Math.max(22,Math.round(v/total*100))}%"></i></div><span>${Math.round(v/total*100)}%</span></div>`).join('');
-    const social=state.links.map(x=>`<a class="social-link" href="#">${esc(x)}</a>`).join('');
-    const parts=[];
-    parts.push(`<section class="readme-hero"><div class="avatar-wrap"><img src="${esc(p.avatar_url||'assets/avatar-placeholder.svg')}" alt="${esc(p.login)} avatar"></div><div class="hero-copy"><div class="hero-handle">@${esc(p.login)}</div><div class="hero-name">${esc(p.name||p.login)}</div><div class="hero-bio">${esc(state.headline)}</div><div class="metric-row">${metricCards.map(([k,v])=>`<div class="metric"><b>${esc(formatNum(typeof v==='number'?v:0))}${v==='LIVE*'?'*':''}</b><span>${k}</span></div>`).join('')}</div></div></section>`);
-    if(sectionByName('About Me')) parts.push(`<section class="readme-section"><div class="section-label">WHOAMI</div><div class="terminal-block">$ cat about.md\n\n${esc(state.about)}\n\n$ echo "open to collaboration"</div></section>`);
-    if(sectionByName('Skills')) parts.push(`<section class="readme-section"><div class="section-label">TECH ARSENAL</div><div class="tag-row">${tech.map(([n])=>`<span class="tag">${esc(n)}</span>`).join('')}</div></section>`);
-    if(sectionByName('GitHub Stats')) parts.push(`<section class="readme-section"><div class="stats-grid"><div class="stat-visual"><div class="section-label">GITHUB STATS</div><h3 style="margin:0;font-size:26px">${formatNum(metricCards[0][1])} ★</h3><p style="color:var(--muted);margin:4px 0 14px">indexed impact across public repositories</p>${['Stars','Repositories','Followers'].map((k,i)=>`<div class="bar-line"><span>${k}</span><div class="bar"><i style="width:${[78,55,62][i]}%"></i></div><span>signal</span></div>`).join('')}</div><div class="stat-visual"><div class="section-label">LANGUAGE MIX</div><div class="bar-stack">${statRows}</div></div></div></section>`);
-    if(sectionByName('Projects')) parts.push(`<section class="readme-section"><div class="section-label">FEATURED PROJECTS</div><div class="project-grid">${projectHtml||'<div class="project-card"><h4>No projects yet</h4><p>Run the GitHub scan to populate real repositories.</p></div>'}</div></section>`);
-    if(sectionByName('Highlights')) parts.push(`<section class="readme-section"><div class="section-label">HIGHLIGHTS</div><div class="metric-row"><div class="metric"><b>${formatNum(p.public_repos||0)}</b><span>public repos</span></div><div class="metric"><b>${formatNum(p.followers||0)}</b><span>followers</span></div><div class="metric"><b>${formatNum(state.repos.reduce((s,r)=>s+r.forks_count,0))}</b><span>forks</span></div><div class="metric"><b>${esc(p.company||'Independent')}</b><span>workspace</span></div></div></section>`);
-    if(sectionByName('Heatmap')) parts.push(`<section class="readme-section"><div class="section-label">CONTRIBUTION SIGNAL</div><div class="stat-visual"><div class="heatmap">${githubContributionGrid()}</div></div></section>`);
-    if(sectionByName('Streak')) parts.push(`<section class="readme-section"><div class="section-label">STREAK</div><div class="terminal-block">Contribution streak widget ready for your generated package.\nConnect the optional Action to refresh it automatically.</div></section>`);
-    if(sectionByName('Connect')) parts.push(`<section class="readme-section"><div class="section-label">CONTACT</div><div class="social-row">${social}</div></section>`);
-    const visualNote=state.visuals.has('contribution-game')?`<section class="readme-section"><div class="section-label">CONTRIBUTION PLAYGROUND</div><div class="terminal-block">[ PLAYGROUND READY ]\nThe exported package can include a theme-matched contribution game asset.</div></section>`:'';
-    parts.push(visualNote);
-    parts.push(`<div class="readme-footer">Generated by ProfileForge · ${esc(template().name)} · ${esc((themes.find(t=>t.id===state.theme)||themes[3]).name)}</div>`);
-    const density=state.density==='compact'?'':state.density==='cinematic'?' style="padding:34px"':'';
-    $('#previewCanvas').innerHTML=`<div class="readme-inner"${density}>${parts.join('')}</div>`;
+  function normalizeUrl(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const candidate = /^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : `https://${raw}`;
+    try {
+      const parsed = new URL(candidate);
+      return ['http:', 'https:', 'mailto:'].includes(parsed.protocol) ? parsed.href : '';
+    } catch { return ''; }
   }
-
-  function buildMarkdown(){
-    const p=state.profile||{login:state.username,name:state.username,bio:'Developer profile generated from public GitHub work.',avatar_url:'assets/avatar-placeholder.svg',followers:0,following:0,public_repos:state.repos.length};
-    const theme=themes.find(t=>t.id===state.theme)||themes[3]; const repos=selectedRepos();
-    const lines=[`# ${p.name||p.login}`, '', `> ${state.headline}`, '', `![Profile avatar](${p.avatar_url||'assets/avatar-placeholder.svg'})`, '', `## WHOAMI`, '', state.about, ''];
-    if(state.sections.includes('Skills')) lines.push('## TECH ARSENAL','',Object.keys(state.languages).sort((a,b)=>state.languages[b]-state.languages[a]).slice(0,8).map(x=>`- ${x}`).join('\n'),'');
-    if(state.sections.includes('GitHub Stats')) lines.push('## GITHUB STATS','',`- ⭐ Stars indexed: ${formatNum(state.repos.reduce((s,r)=>s+r.stargazers_count,0))}`,`- 📦 Public repositories: ${formatNum(p.public_repos||state.repos.length)}`,`- 👥 Followers: ${formatNum(p.followers||0)}`,'');
-    if(state.sections.includes('Projects')){lines.push('## FEATURED PROJECTS','');repos.forEach(r=>lines.push(`### [${r.name}](${r.html_url})`,``,mdEsc(r.description||'Public project.'),``, `**${r.language||'Code'}** · ⭐ ${r.stargazers_count} · ⑂ ${r.forks_count}`,'') )}
-    if(state.sections.includes('Heatmap')) lines.push('## CONTRIBUTION SIGNAL','',`![Contribution grid](assets/${slug(p.login)}-heatmap.svg)`,'');
-    if(state.sections.includes('Connect')) lines.push('## CONTACT','',state.links.map(x=>`- ${x}`).join('\n'),'');
-    if(state.visuals.has('contribution-game')) lines.push('## CONTRIBUTION PLAYGROUND','',`![Contribution playground](assets/${slug(p.login)}-playground.svg)`,'');
-    lines.push(`---`,`Theme: **${theme.name}** · Template: **${template().name}** · Generated with ProfileForge`);
-    return lines.join('\n');
+  function parseLinks(rawText) {
+    return String(rawText || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean).map(line => {
+      const pieces = line.split('|').map(piece => piece.trim());
+      if (pieces.length > 1) return { label: pieces[0] || 'Link', url: normalizeUrl(pieces.slice(1).join('|')) };
+      const url = normalizeUrl(pieces[0]);
+      let label = 'Website';
+      try { label = new URL(url).hostname.replace(/^www\./, '').split('.')[0] || label; } catch { /* keep fallback */ }
+      return { label: label.charAt(0).toUpperCase() + label.slice(1), url };
+    }).filter(link => link.url);
   }
-
-  function renderMarkdown(){ $('#markdownCanvas').textContent=buildMarkdown(); }
-
-  function renderAll(){
-    applyTheme(); renderGoalGrid(); renderTemplateList(); renderVisualList(); renderThemeGrid(); renderTimeline(); renderSignals(); renderProjects(); renderPreview(); renderMarkdown(); $('#headlineInput').value=state.headline; $('#aboutInput').value=state.about; $('#linksInput').value=state.links.join('\n'); $('[data-view="'+state.view+'"]')?.classList.add('active'); updateView();
+  function parsePipeLines(text) {
+    return String(text || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean).map(line => {
+      const [title = '', organization = '', period = '', detail = ''] = line.split('|').map(part => part.trim());
+      return { title, organization, period, detail };
+    });
   }
-  function renderGoalGrid(){ $('#goalGrid').innerHTML=goals.map(g=>`<button class="goal-btn ${state.goal===g.id?'active':''}" data-goal="${g.id}"><b>${g.name}</b><small>${g.sub}</small></button>`).join('') }
-  function renderTemplateList(){ $('#templateList').innerHTML=templates.map(t=>`<button class="template-btn ${state.template===t.id?'active':''}" data-template="${t.id}"><span class="template-meta"><span class="swatch" style="color:${t.accent};background:${t.accent}"></span>${t.name}</span><span>›</span></button>`).join('') }
-  function renderVisualList(){ $('#visualList').innerHTML=visuals.map(v=>`<button class="visual-btn ${state.visuals.has(v.id)?'active':''}" data-visual="${v.id}"><span>${v.name}</span><small>${v.sub}</small></button>`).join('') }
-  function renderThemeGrid(){ $('#themeGrid').innerHTML=themes.map(t=>`<button class="theme-btn ${state.theme===t.id?'active':''}" data-theme="${t.id}" style="--t1:${t.a};--t2:${t.b}">${esc(t.name)}<small>${esc(t.name==='GitHub Dark'?'Pro standard':'Theme')}</small></button>`).join(''); $('#themeCatalog').innerHTML=themes.map(t=>`<div class="theme-swatch-card"><div class="theme-swatch" style="--g1:${t.a};--g2:${t.b}"></div><b>${esc(t.name)}</b><span>${t.a}</span></div>`).join('') }
-  function renderTimeline(){ $('#timeline').innerHTML=state.sections.map((s,i)=>`<div class="timeline-item ${state.activeSection===s?'active':''}" data-section="${s}"><div class="num">${String(i+1).padStart(2,'0')}</div><b>${s}</b><div class="timeline-controls"><button data-move="up">↑</button><button data-move="down">↓</button><button data-move="remove">×</button></div></div>`).join('') }
-  function renderSignals(){ const p=state.profile; const total=state.repos.reduce((s,r)=>s+r.stargazers_count,0); $('#signalGrid').innerHTML=`<div class="signal"><b>${formatNum(total)}</b><span>Stars</span></div><div class="signal"><b>${formatNum(p?.followers||0)}</b><span>Followers</span></div><div class="signal"><b>${formatNum(state.repos.length)}</b><span>Repos</span></div><div class="signal"><b>${formatNum(state.repos.reduce((s,r)=>s+r.forks_count,0))}</b><span>Forks</span></div>` }
-  function renderProjects(){ $('#projectPicker').innerHTML=state.repos.slice(0,30).map(r=>`<label class="project-item"><input type="checkbox" data-repo="${esc(r.full_name)}" ${state.selectedRepos.includes(r.full_name)?'checked':''}><span><b>${esc(r.name)}</b><small style="display:block;color:var(--muted)">${esc(r.language||'Code')} · ★ ${r.stargazers_count}</small></span></label>`).join('') || '<div class="hint">Scan a profile to load repositories.</div>' }
-  function updateView(){ $$('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===state.view)); $('#previewCanvas').classList.toggle('hidden',state.view!=='preview'&&state.view!=='github'); $('#markdownCanvas').classList.toggle('hidden',state.view!=='markdown'); $('#previewCanvas').style.background=state.view==='github'?'#fff':'#0d1217'; $('#previewCanvas').style.color=state.view==='github'?'#222':'inherit'; }
-
-  function buildAssetSvgs(){
-    const p=state.profile||{login:state.username,name:state.username,avatar_url:''}; const t=themes.find(x=>x.id===state.theme)||themes[3]; const u=slug(p.login);
-    const base=(w,h,body)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="${t.a}"/><stop offset="1" stop-color="${t.b}"/></linearGradient><filter id="s"><feGaussianBlur stdDeviation="18"/></filter></defs><rect width="${w}" height="${h}" rx="28" fill="#0b0f14"/><circle cx="${w-80}" cy="70" r="100" fill="url(#g)" opacity=".18" filter="url(#s)"/>${body}</svg>`;
-    const hero=base(1200,420,`<rect x="40" y="40" width="1120" height="340" rx="22" fill="#10161d" stroke="#2a3642"/><circle cx="150" cy="180" r="82" fill="url(#g)"/><circle cx="150" cy="180" r="67" fill="#111821"/><text x="250" y="155" fill="${t.a}" font-family="Arial" font-size="18" font-weight="700">@${esc(p.login)}</text><text x="250" y="205" fill="#f5f7f5" font-family="Arial" font-size="38" font-weight="700">${esc(p.name||p.login)}</text><text x="250" y="250" fill="#94a3af" font-family="Arial" font-size="20">${esc(state.headline.slice(0,58))}</text><rect x="250" y="290" width="155" height="38" rx="19" fill="url(#g)"/><text x="327" y="315" text-anchor="middle" fill="#07110a" font-family="Arial" font-size="13" font-weight="700">ProfileForge</text>`);
-    const vals=state.contributions.map(x=>x.count||0); const max=Math.max(1,...vals); const heatCells=Array.from({length:420},(_,i)=>{const x=45+(i%60)*18,y=68+Math.floor(i/60)*24,n=state.contributions[i]?.count||0;const ratio=n/max;const op=n===0?.06:ratio<.25?.22:ratio<.5?.46:ratio<.75?.7:.95;return `<rect x="${x}" y="${y}" width="14" height="14" rx="3" fill="${t.a}" opacity="${op}"/>`}).join(''); const heat=base(1200,240,`<text x="45" y="42" fill="${t.a}" font-family="Arial" font-size="14" font-weight="700">CONTRIBUTION SIGNAL</text>${heatCells}`);
-    const play=base(1000,320,`<text x="40" y="58" fill="${t.a}" font-family="Arial" font-size="15" font-weight="700">CONTRIBUTION PLAYGROUND</text><text x="40" y="94" fill="#d9e2dc" font-family="Arial" font-size="24" font-weight="700">${esc(template().name)}</text><text x="40" y="124" fill="#8895a2" font-family="Arial" font-size="14">Game-ready visual placeholder generated locally.</text><rect x="40" y="160" width="920" height="110" rx="18" fill="#090d12" stroke="#2a3642"/>${Array.from({length:18},(_,i)=>`<rect x="${65+i*47}" y="${210+((i%3)-1)*12}" width="26" height="12" rx="5" fill="${t.a}" opacity="${0.15+(i%5)*0.15}"/>`).join('')}`);
-    return {'hero.svg':hero,'heatmap.svg':heat,'playground.svg':play, [u+'-heatmap.svg']:heat, [u+'-playground.svg']:play};
+  function sanitizeContent(raw = {}) {
+    const content = { ...DEFAULT_STATE.content, ...(raw && typeof raw === 'object' ? raw : {}) };
+    const stringFields = ['name','headline','about','location','company','website','email','experience','education','achievements','support'];
+    stringFields.forEach(key => { content[key] = String(content[key] ?? ''); });
+    content.links = Array.isArray(content.links)
+      ? content.links.map(item => ({ label: String(item?.label || 'Link'), url: normalizeUrl(item?.url) })).filter(item => item.url)
+      : parseLinks(String(content.links || ''));
+    content.skills = Array.isArray(content.skills)
+      ? content.skills.map(item => String(item).trim()).filter(Boolean).slice(0, 40)
+      : String(content.skills || '').split(',').map(item => item.trim()).filter(Boolean).slice(0, 40);
+    return content;
   }
-  function downloadText(name,text,type='text/plain'){const blob=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-  function openExport(){ $('#exportSummary').textContent=`README.md\nassets/${slug(state.username)}-heatmap.svg\nassets/${slug(state.username)}-playground.svg (optional)\n.github/workflows/update-profile.yml (optional)\n\nTemplate: ${template().name}\nTheme: ${themes.find(t=>t.id===state.theme)?.name}\nGoal: ${goals.find(g=>g.id===state.goal)?.name}`; $('#modalBackdrop').classList.remove('hidden') }
-
-  function improve(){
-    const lang=Object.keys(state.languages).slice(0,3); const top=selectedRepos().slice(0,2).map(r=>r.name).join(' and '); state.headline = state.goal==='get-hired'?`Developer focused on ${lang.join(', ')||'software'} · shipping ${top||'useful projects'}.`:state.goal==='open-source'?`Open-source builder focused on ${lang.join(', ')||'software'} and sustainable maintainer workflows.`:`Building products with ${lang.join(', ')||'software'} and turning ideas into shipped work.`; state.about = state.profile?.bio || `I build and iterate in public, with a focus on ${lang.join(', ')||'software'}. Recent work includes ${top||'open repositories and experiments'}.`; $('#headlineInput').value=state.headline; $('#aboutInput').value=state.about; $('#suggestionBox').textContent='Applied a profile-aware headline and about section based on your selected goal and public GitHub signal.'; renderPreview(); renderMarkdown(); persist(); toast('README improved'); }
-
-  function bind(){
-    $('#heroStartBtn').addEventListener('click',()=>{document.querySelector('#studio')?.scrollIntoView({behavior:'smooth'});setTimeout(()=>$('#usernameInput')?.focus(),450)}); $('#scanBtn').addEventListener('click',fetchGitHub); $('#usernameInput').addEventListener('keydown',e=>{if(e.key==='Enter')fetchGitHub()}); $('#sampleBtn').addEventListener('click',()=>{state.username='octocat';$('#usernameInput').value='octocat';fetchGitHub()});
-    $('#headlineInput').addEventListener('input',e=>{state.headline=e.target.value;renderPreview();renderMarkdown();persist()}); $('#aboutInput').addEventListener('input',e=>{state.about=e.target.value;renderPreview();renderMarkdown();persist()}); $('#linksInput').addEventListener('input',e=>{state.links=e.target.value.split(/\n|\|/).map(s=>s.trim()).filter(Boolean);renderPreview();renderMarkdown();persist()});
-    $('#goalGrid').addEventListener('click',e=>{const b=e.target.closest('[data-goal]');if(!b)return;state.goal=b.dataset.goal;setQuery();renderGoalGrid();persist();toast('Goal changed')});
-    $('#templateList').addEventListener('click',e=>{const b=e.target.closest('[data-template]');if(!b)return;state.template=b.dataset.template;state.sections=templates.find(t=>t.id===state.template)?.parts.map(x=>x==='Hero'?'Header':x==='Stack'?'Skills':x==='Portrait'?'About Me':x==='System Scan'?'About Me':x==='Language Mix'?'Skills':x==='Playground'?'Heatmap':x).filter((x,i,a)=>a.indexOf(x)===i) || [...sectionsDefault];state.activeSection=state.sections[0]||'Header';setQuery();renderAll();persist();toast('Template applied')});
-    $('#visualList').addEventListener('click',e=>{const b=e.target.closest('[data-visual]');if(!b)return;const id=b.dataset.visual;state.visuals.has(id)?state.visuals.delete(id):state.visuals.add(id);renderVisualList();renderPreview();renderMarkdown();persist()});
-    $('#themeGrid').addEventListener('click',e=>{const b=e.target.closest('[data-theme]');if(!b)return;state.theme=b.dataset.theme;setQuery();applyTheme();renderThemeGrid();renderPreview();renderMarkdown();persist();toast('Theme changed')});
-    $('#densityControl').addEventListener('click',e=>{const b=e.target.closest('[data-density]');if(!b)return;state.density=b.dataset.density;$$('#densityControl button').forEach(x=>x.classList.toggle('active',x===b));renderPreview();persist()});
-    $$('.toggle-row input').forEach(i=>i.addEventListener('change',()=>{document.body.classList.toggle('no-glass',!$$('[data-effect="glass"]')[0].checked);document.body.classList.toggle('no-glow',!$$('[data-effect="glow"]')[0].checked);document.body.classList.toggle('no-noise',!$$('[data-effect="noise"]')[0].checked);state.effects={glass:$$('[data-effect="glass"]')[0].checked,glow:$$('[data-effect="glow"]')[0].checked,noise:$$('[data-effect="noise"]')[0].checked};persist()}));
-    $$('.tab').forEach(t=>t.addEventListener('click',()=>{state.view=t.dataset.view;updateView();renderMarkdown();}));
-    $$('.panel-tab').forEach(t=>t.addEventListener('click',()=>{$$('.panel-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');$$('.inspector-pane').forEach(x=>x.classList.remove('active'));$('#inspector'+t.dataset.inspector[0].toUpperCase()+t.dataset.inspector.slice(1)).classList.add('active')}));
-    $('#timeline').addEventListener('click',e=>{const item=e.target.closest('[data-section]');if(!item)return;const section=item.dataset.section;const control=e.target.closest('[data-move]');if(!control){state.activeSection=section;$('#editingTitle').textContent=section;renderTimeline();return}const i=state.sections.indexOf(section);if(control.dataset.move==='remove'&&state.sections.length>1)state.sections.splice(i,1);if(control.dataset.move==='up'&&i>0)[state.sections[i-1],state.sections[i]]=[state.sections[i],state.sections[i-1]];if(control.dataset.move==='down'&&i<state.sections.length-1)[state.sections[i+1],state.sections[i]]=[state.sections[i],state.sections[i+1]];state.activeSection=state.sections[Math.max(0,Math.min(i,state.sections.length-1))];renderTimeline();renderPreview();renderMarkdown();persist()});
-    $('#resetSectionsBtn').addEventListener('click',()=>{state.sections=[...sectionsDefault];renderTimeline();renderPreview();renderMarkdown();persist()}); $('#refreshProjectsBtn').addEventListener('click',fetchGitHub); $('#improveBtn').addEventListener('click',improve); $('#copyBtn').addEventListener('click',async()=>{await navigator.clipboard.writeText(buildMarkdown());toast('Markdown copied')}); $('#downloadBtn').addEventListener('click',()=>downloadText('README.md',buildMarkdown(),'text/markdown')); $('#exportBtn').addEventListener('click',openExport); $('#closeModal').addEventListener('click',()=>$('#modalBackdrop').classList.add('hidden')); $('#modalBackdrop').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.add('hidden')});
-    $('#downloadPackageBtn').addEventListener('click',()=>{downloadText('README.md',buildMarkdown(),'text/markdown');const assets=buildAssetSvgs();Object.entries(assets).forEach(([n,c])=>downloadText(n,c,'image/svg+xml'));toast('README + SVG assets downloaded')});
-    $('#downloadActionBtn').addEventListener('click',()=>downloadText('update-profile.yml',workflowText(),'text/yaml')); $('#copyLinkBtn').addEventListener('click',async()=>{setQuery();await navigator.clipboard.writeText(location.href);toast('Studio link copied')});
-    $('#catalogGrid').addEventListener('click',e=>{const b=e.target.closest('[data-template]');if(!b)return;state.template=b.dataset.template;setQuery();renderAll();window.scrollTo({top:0,behavior:'smooth'})});
+  function getSelectedRepos() {
+    const byName = new Map(state.repos.map(repo => [repo.full_name, repo]));
+    return state.selectedRepos.map(fullName => byName.get(fullName)).filter(Boolean).slice(0, Number(CFG.limits?.featuredProjects || 8));
   }
-  function workflowText(){return `name: Refresh Profile Assets\n\non:\n  workflow_dispatch:\n  schedule:\n    - cron: '0 3 * * 0'\n\npermissions:\n  contents: write\n\njobs:\n  refresh:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: 20\n      - run: node scripts/build-profile.mjs ${state.username}\n      - name: Commit refreshed assets\n        run: |\n          git config user.name 'github-actions[bot]'\n          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'\n          git add .\n          git commit -m 'chore: refresh profile assets' || exit 0\n          git push\n`}
-
-  function init(){
-    restore(); loadQuery(); $('#usernameInput').value=state.username; bind();
-    $('#catalogGrid').innerHTML=templates.map(t=>`<article class="catalog-card"><div class="catalog-art" style="--grad:linear-gradient(135deg,${t.accent},#0e141b 68%)"><div style="padding:12px;font-size:10px;letter-spacing:.16em;color:rgba(255,255,255,.78)">${esc(t.type)}</div><div style="position:absolute;left:12px;bottom:12px;font-size:20px;font-weight:800">${esc(t.name)}</div></div><h3>${esc(t.name)}</h3><p>${esc(t.desc)}</p><div class="catalog-foot"><small>${t.parts.join(' · ')}</small><button class="use-link" data-template="${t.id}">Use</button></div></article>`).join('');
-    renderAll(); fetchGitHub();
+  function getStats() {
+    const profile = state.profile || {};
+    return {
+      repos: Number(profile.public_repos ?? state.repos.length) || 0,
+      scannedRepos: state.repos.length,
+      stars: state.repos.reduce((sum, repo) => sum + (Number(repo.stargazers_count) || 0), 0),
+      forks: state.repos.reduce((sum, repo) => sum + (Number(repo.forks_count) || 0), 0),
+      followers: Number(profile.followers) || 0,
+      following: Number(profile.following) || 0,
+      contributions: state.contributions.reduce((sum, item) => sum + (Number(item.count) || 0), 0),
+      publicGists: Number(profile.public_gists) || 0
+    };
   }
-  return {init};
+  function getLanguages() {
+    return Object.entries(state.languages || {}).filter(([, count]) => Number(count) > 0).sort((a, b) => b[1] - a[1]);
+  }
+  async function fetchJson(url, signal) {
+    const response = await fetch(url, {
+      headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+      signal,
+      cache: 'no-store'
+    });
+    if (!response.ok) {
+      if (response.status === 404) throw new Error('GitHub user not found. Check the username and try again.');
+      if (response.status === 403 || response.status === 429) {
+        const reset = response.headers.get('x-ratelimit-reset');
+        const resetText = reset ? ` Try again after ${new Date(Number(reset) * 1000).toLocaleTimeString()}.` : ' Try again later.';
+        throw new Error(`GitHub API rate limit reached.${resetText}`);
+      }
+      throw new Error(`GitHub API request failed (${response.status}).`);
+    }
+    return response.json();
+  }
+  async function fetchContributions(username, signal) {
+    try {
+      const base = CFG.api?.contributionsBase || 'https://github-contributions-api.jogruber.de/v4';
+      const response = await fetch(`${base}/${encodeURIComponent(username)}?y=last`, { signal, cache: 'no-store' });
+      if (!response.ok) return [];
+      const data = await response.json();
+      const list = Array.isArray(data) ? data : (Array.isArray(data.contributions) ? data.contributions : []);
+      return list.filter(item => item && item.date).map(item => ({ date: String(item.date), count: Number(item.count) || 0, level: Number(item.level) || 0 })).sort((a, b) => a.date.localeCompare(b.date));
+    } catch (error) {
+      if (error.name === 'AbortError') throw error;
+      console.info('Contribution calendar unavailable; the rest of the profile can still be used.', error);
+      return [];
+    }
+  }
+  async function scanGitHub(usernameOverride) {
+    const username = String(usernameOverride || $('#usernameInput')?.value || state.username).trim().replace(/^@/, '');
+    if (!/^[a-zA-Z0-9-]{1,39}$/.test(username) || username.startsWith('-') || username.endsWith('-') || username.includes('--')) {
+      setScanState('error', 'Enter a valid GitHub username.');
+      toast('Invalid GitHub username');
+      return;
+    }
+    if (scanController) scanController.abort();
+    scanController = new AbortController();
+    const sequence = ++scanSequence;
+    const timeoutMs = Number(CFG.api?.requestTimeoutMs || 12000) * (Number(CFG.api?.repositoryPages || 3) + 1);
+    const timeout = setTimeout(() => scanController?.abort(), timeoutMs);
+    setScanState('loading', 'Scanning profile and repositories…');
+    $('#scanBtn').disabled = true;
+    $('#workspaceStatus').textContent = 'Fetching public GitHub data…';
+    try {
+      const profile = await fetchJson(`${CFG.api?.githubBase || 'https://api.github.com'}/users/${encodeURIComponent(username)}`, scanController.signal);
+      const pageLimit = Math.max(1, Math.min(5, Number(CFG.api?.repositoryPages || 3)));
+      const repositories = [];
+      for (let page = 1; page <= pageLimit; page += 1) {
+        const batch = await fetchJson(`${CFG.api?.githubBase || 'https://api.github.com'}/users/${encodeURIComponent(username)}/repos?per_page=100&page=${page}&sort=updated&direction=desc`, scanController.signal);
+        if (!Array.isArray(batch)) break;
+        repositories.push(...batch);
+        if (batch.length < 100) break;
+      }
+      const contributions = await fetchContributions(profile.login, scanController.signal);
+      if (sequence !== scanSequence) return;
+      state.profile = profile;
+      state.username = profile.login;
+      state.repos = repositories.slice(0, Number(CFG.limits?.visibleProjects || 100));
+      state.contributions = contributions;
+      const languageCounts = {};
+      state.repos.filter(repo => !repo.fork && !repo.archived).forEach(repo => {
+        if (repo.language) languageCounts[repo.language] = (languageCounts[repo.language] || 0) + 1;
+      });
+      state.languages = languageCounts;
+      const rank = state.repos.filter(repo => !repo.fork).sort((a, b) => (b.stargazers_count + b.forks_count) - (a.stargazers_count + a.forks_count));
+      if (!state.selectedRepos.length || !state.selectedRepos.some(fullName => state.repos.some(repo => repo.full_name === fullName))) {
+        state.selectedRepos = rank.slice(0, Number(CFG.limits?.featuredProjects || 8)).map(repo => repo.full_name);
+      } else {
+        state.selectedRepos = state.selectedRepos.filter(fullName => state.repos.some(repo => repo.full_name === fullName));
+      }
+      setDefaultContentFromProfile(profile);
+      $('#usernameInput').value = profile.login;
+      setScanState('success', `Loaded ${state.repos.length} repositories · ${contributions.length ? 'contribution calendar ready' : 'calendar unavailable'}`);
+      $('#workspaceStatus').textContent = 'GitHub profile synced';
+      writeQuery();
+      renderAll();
+      persist();
+      toast(`@${profile.login} profile loaded`);
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        if (sequence === scanSequence) setScanState('error', 'The request timed out or was cancelled. Try again.');
+      } else {
+        setScanState('error', error.message || 'Could not load this GitHub profile.');
+        $('#workspaceStatus').textContent = 'Using current local draft';
+        toast(error.message || 'GitHub scan failed');
+      }
+    } finally {
+      clearTimeout(timeout);
+      if (sequence === scanSequence) $('#scanBtn').disabled = false;
+    }
+  }
+  function setProfileValue(key, value) {
+    state.content[key] = value;
+    persist();
+    renderPreview();
+    renderMarkdown();
+    renderHeroDemo();
+  }
+  function syncInputs() {
+    const c = state.content;
+    const values = {
+      nameInput: c.name, headlineInput: c.headline, aboutInput: c.about, locationInput: c.location,
+      companyInput: c.company, websiteInput: c.website, emailInput: c.email,
+      linksInput: c.links.map(item => `${item.label} | ${item.url}`).join('\n'),
+      skillsInput: c.skills.join(', '), experienceInput: c.experience, educationInput: c.education,
+      achievementsInput: c.achievements, supportInput: c.support
+    };
+    Object.entries(values).forEach(([id, value]) => { if ($('#' + id)) $('#' + id).value = value ?? ''; });
+    $('#usernameInput').value = state.username || '';
+    $('#densitySelect').value = state.density;
+    $$('[data-setting]').forEach(input => { input.checked = Boolean(state.settings[input.dataset.setting]); });
+  }
+  function updateContentFromInput(event) {
+    const keyById = {
+      nameInput: 'name', headlineInput: 'headline', aboutInput: 'about', locationInput: 'location',
+      companyInput: 'company', websiteInput: 'website', emailInput: 'email', experienceInput: 'experience',
+      educationInput: 'education', achievementsInput: 'achievements', supportInput: 'support'
+    };
+    const key = keyById[event.target.id];
+    if (key) state.content[key] = event.target.value;
+    if (event.target.id === 'linksInput') state.content.links = parseLinks(event.target.value);
+    if (event.target.id === 'skillsInput') state.content.skills = event.target.value.split(',').map(item => item.trim()).filter(Boolean).slice(0, 40);
+    persist();
+    renderPreview();
+    renderMarkdown();
+    renderHeroDemo();
+  }
+  function selectedLinks() {
+    const links = [...(state.content.links || [])];
+    if (state.content.website) links.unshift({ label: 'Website', url: normalizeUrl(state.content.website) });
+    if (state.content.email) links.push({ label: 'Email', url: `mailto:${state.content.email.trim()}` });
+    if (state.profile?.html_url && !links.some(item => item.url === state.profile.html_url)) links.unshift({ label: 'GitHub', url: state.profile.html_url });
+    const seen = new Set();
+    return links.filter(link => link.url && !seen.has(link.url) && seen.add(link.url));
+  }
+  function contributionLevels() {
+    const entries = state.contributions || [];
+    const byDate = new Map(entries.map(item => [item.date, Number(item.count) || 0]));
+    const result = [];
+    const end = new Date(); end.setHours(0, 0, 0, 0);
+    const start = new Date(end); start.setDate(start.getDate() - 363);
+    start.setDate(start.getDate() - start.getDay());
+    for (let index = 0; index < 371; index += 1) {
+      const date = new Date(start); date.setDate(start.getDate() + index);
+      const key = date.toISOString().slice(0, 10);
+      const count = byDate.get(key) || 0;
+      const level = count === 0 ? 0 : count <= 2 ? 1 : count <= 5 ? 2 : count <= 9 ? 3 : 4;
+      result.push({ date: key, count, level });
+    }
+    return result;
+  }
+  function sectionHeading(icon, title) { return `<h2><span>${escapeHtml(icon)}</span>${escapeHtml(title)}</h2>`; }
+  function renderHeroSection() {
+    const profile = state.profile || {};
+    const avatar = profile.avatar_url || 'assets/avatar-placeholder.svg';
+    const c = state.content;
+    const stats = getStats();
+    const metrics = [
+      ['REPOSITORIES', stats.repos], ['STARS', stats.stars], ['FOLLOWERS', stats.followers], ['FORKS', stats.forks]
+    ];
+    const badges = state.settings.showBadges ? `<div class="rf-badges">${[
+      c.location && `📍 ${c.location}`, c.company && `🏢 ${c.company}`, c.headline && '⚡ Available for collaboration'
+    ].filter(Boolean).map(label => `<span class="rf-badge">${escapeHtml(label)}</span>`).join('')}</div>` : '';
+    return `<header class="rf-hero">${state.settings.showAvatar ? `<img class="rf-avatar" src="${escapeHtml(avatar)}" alt="${escapeHtml(c.name || profile.login || 'Profile')} avatar" loading="lazy" onerror="this.src='assets/avatar-placeholder.svg'">` : ''}<div class="rf-handle">@${escapeHtml(profile.login || state.username || 'username')}</div><h1 class="rf-name">${escapeHtml(c.name || profile.name || state.username || 'Your name')}</h1><div class="rf-headline">${escapeHtml(c.headline || 'Your professional headline goes here.')}</div>${c.about ? `<p class="rf-bio">${escapeHtml(c.about)}</p>` : ''}${badges}${state.settings.showStats ? `<div class="rf-metrics">${metrics.map(([label, value]) => `<div class="rf-metric"><b>${formatNumber(value)}</b><span>${label}</span></div>`).join('')}</div>` : ''}</header>`;
+  }
+  function renderSectionHtml(id) {
+    const c = state.content;
+    const profile = state.profile || {};
+    const stats = getStats();
+    const languages = getLanguages().slice(0, 10);
+    const projects = getSelectedRepos();
+    switch (id) {
+      case 'hero': return renderHeroSection();
+      case 'about': return c.about ? `<section class="rf-section">${sectionHeading('👋', 'About me')}<p>${escapeHtml(c.about).replace(/\n/g, '<br>')}</p></section>` : '';
+      case 'highlights': {
+        const bits = [c.location && `📍 ${c.location}`, c.company && `🏢 ${c.company}`, profile.created_at && `🗓️ GitHub member since ${new Date(profile.created_at).getFullYear()}`].filter(Boolean);
+        if (!bits.length && !state.settings.showStats) return '';
+        return `<section class="rf-section">${sectionHeading('📌', 'Highlights')}<div class="rf-tag-list">${bits.map(item => `<span class="rf-tag">${escapeHtml(item)}</span>`).join('')}${state.settings.showStats ? `<span class="rf-tag">⭐ ${formatNumber(stats.stars)} stars earned</span><span class="rf-tag">🍴 ${formatNumber(stats.forks)} forks</span>` : ''}</div></section>`;
+      }
+      case 'skills': {
+        const values = [...new Set([...(c.skills || []), ...languages.map(([name]) => name)])].slice(0, 32);
+        return values.length ? `<section class="rf-section">${sectionHeading('🧰', 'Tech stack & skills')}<div class="rf-tag-list">${values.map(name => `<span class="rf-tag">${escapeHtml(CATALOG.tech?.[name]?.icon || '✦')} ${escapeHtml(name)}</span>`).join('')}</div></section>` : '';
+      }
+      case 'projects': {
+        const cards = projects.map(repo => `<a class="rf-project" href="${escapeHtml(repo.html_url)}" target="_blank" rel="noreferrer"><h3>📦 ${escapeHtml(repo.name)}</h3><p>${escapeHtml(repo.description || 'A public repository. Explore the source and documentation.')}</p><div class="rf-project-meta"><span>⭐ ${formatNumber(repo.stargazers_count)}</span><span>⑂ ${formatNumber(repo.forks_count)}</span><span>${escapeHtml(repo.language || 'Code')}</span></div></a>`).join('');
+        return `<section class="rf-section">${sectionHeading('🚀', 'Featured projects')}<div class="rf-project-grid">${cards || '<p>No projects selected yet. Choose repositories in the project curator.</p>'}</div></section>`;
+      }
+      case 'stats':
+        return `<section class="rf-section">${sectionHeading('📊', 'GitHub statistics')}<div class="rf-metrics">${[['Repositories', stats.repos], ['Stars', stats.stars], ['Followers', stats.followers], ['Forks', stats.forks]].map(([label, value]) => `<div class="rf-metric"><b>${formatNumber(value)}</b><span>${label.toUpperCase()}</span></div>`).join('')}</div><p>Repository metadata is sampled from public repositories visible to the GitHub API.</p></section>`;
+      case 'activity': {
+        const levels = contributionLevels();
+        const total = stats.contributions;
+        return `<section class="rf-section">${sectionHeading('🟩', 'Contribution activity')}<div class="rf-activity-grid" aria-label="Contribution calendar">${levels.map(day => `<i class="rf-day" data-level="${day.level}" title="${day.count} contributions on ${day.date}"></i>`).join('')}</div><p>${total ? `${formatNumber(total)} contributions recorded by the public calendar source.` : 'Contribution data is unavailable for this profile. You can still publish the rest of the README.'}</p></section>`;
+      }
+      case 'experience': {
+        const rows = parsePipeLines(c.experience);
+        return rows.length ? `<section class="rf-section">${sectionHeading('💼', 'Experience')}<div class="rf-list">${rows.map(row => `<div class="rf-list-item"><b>${escapeHtml(row.title || 'Role')}${row.organization ? ` · ${escapeHtml(row.organization)}` : ''}</b>${row.period ? `<small>${escapeHtml(row.period)}</small>` : ''}${row.detail ? `<p>${escapeHtml(row.detail)}</p>` : ''}</div>`).join('')}</div></section>` : '';
+      }
+      case 'education': {
+        const rows = parsePipeLines(c.education);
+        return rows.length ? `<section class="rf-section">${sectionHeading('🎓', 'Education')}<div class="rf-list">${rows.map(row => `<div class="rf-list-item"><b>${escapeHtml(row.title || 'Education')}${row.organization ? ` · ${escapeHtml(row.organization)}` : ''}</b>${row.period ? `<small>${escapeHtml(row.period)}</small>` : ''}${row.detail ? `<p>${escapeHtml(row.detail)}</p>` : ''}</div>`).join('')}</div></section>` : '';
+      }
+      case 'achievements': {
+        const rows = String(c.achievements || '').split(/\r?\n/).map(row => row.trim()).filter(Boolean);
+        return rows.length ? `<section class="rf-section">${sectionHeading('🏆', 'Achievements & certifications')}<div class="rf-tag-list">${rows.map(row => `<span class="rf-tag">🏅 ${escapeHtml(row)}</span>`).join('')}</div></section>` : '';
+      }
+      case 'connect': {
+        const links = selectedLinks();
+        return links.length ? `<section class="rf-section">${sectionHeading('🔗', 'Connect')}<div class="rf-links">${links.map(link => `<a class="rf-link" href="${escapeHtml(link.url)}" target="_blank" rel="noreferrer">${escapeHtml(link.label)} ↗</a>`).join('')}</div></section>` : '';
+      }
+      case 'support':
+        return c.support && normalizeUrl(c.support) ? `<section class="rf-section">${sectionHeading('☕', 'Support my work')}<p>If my work has been useful to you, you can support future experiments and open-source projects.</p><div class="rf-links"><a class="rf-link" href="${escapeHtml(normalizeUrl(c.support))}" target="_blank" rel="noreferrer">Support this work ↗</a></div></section>` : '';
+      default: return '';
+    }
+  }
+  function buildPreviewHtml() {
+    const sections = state.sections.map(id => renderSectionHtml(id)).filter(Boolean);
+    return `<div class="readme-inner density-${escapeHtml(state.density)}">${sections.join('')}<div class="rf-footer">Designed with ProfileForge · ${escapeHtml(template().name)} · ${escapeHtml(theme().name)}</div></div>`;
+  }
+  function renderPreview() {
+    const canvas = $('#previewCanvas');
+    if (!canvas) return;
+    canvas.innerHTML = buildPreviewHtml();
+    canvas.classList.toggle('github-mode', state.view === 'github');
+    $('#previewPath').textContent = `github.com / ${state.username || 'username'}`;
+  }
+  function markdownLink(label, url) {
+    const safe = normalizeUrl(url);
+    return safe ? `[${String(label).replace(/[\[\]]/g, '')}](${safe.replace(/\)/g, '%29')})` : '';
+  }
+  function buildMarkdown() {
+    const profile = state.profile || {};
+    const c = state.content;
+    const stats = getStats();
+    const lines = [];
+    const add = (...parts) => lines.push(...parts);
+    const has = id => state.sections.includes(id);
+    add('<!-- ProfileForge generated README. Edit this file freely after publishing. -->', '');
+    if (has('hero')) {
+      add('<div align="center">', '');
+      add(`<img src="assets/${slug(state.username)}-hero.svg" width="100%" alt="${escapeHtml(c.name || profile.login || state.username)} profile banner" />`, '');
+      if (state.settings.showAvatar && profile.avatar_url) add(`<img src="${escapeHtml(profile.avatar_url)}" width="96" alt="${escapeHtml(c.name || profile.login || state.username)} avatar" />`, '');
+      add(`<h1>${escapeHtml(c.name || profile.name || profile.login || state.username)}</h1>`);
+      if (c.headline) add(`<p><strong>${escapeHtml(c.headline)}</strong></p>`);
+      if (state.settings.showBadges) {
+        const badgeLinks = [];
+        if (profile.html_url) badgeLinks.push(`<a href="${escapeHtml(profile.html_url)}"><img src="https://img.shields.io/badge/GitHub-${encodeURIComponent(profile.login || state.username)}-181717?style=for-the-badge&logo=github" alt="GitHub" /></a>`);
+        if (c.website) badgeLinks.push(`<a href="${escapeHtml(normalizeUrl(c.website))}"><img src="https://img.shields.io/badge/Portfolio-Visit-0ea5a4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Portfolio" /></a>`);
+        if (badgeLinks.length) add('', badgeLinks.join(' '));
+      }
+      add('', '</div>', '');
+    }
+    if (has('about') && c.about) add('## 👋 About me', '', c.about, '');
+    if (has('highlights')) {
+      const details = [c.location && `📍 ${c.location}`, c.company && `🏢 ${c.company}`, profile.created_at && `🗓️ GitHub member since ${new Date(profile.created_at).getFullYear()}`].filter(Boolean);
+      if (details.length || state.settings.showStats) add('## 📌 Highlights', '', ...details, ...(state.settings.showStats ? [`⭐ **${formatNumber(stats.stars)}** stars · 🍴 **${formatNumber(stats.forks)}** forks · 👥 **${formatNumber(stats.followers)}** followers`] : []), '');
+    }
+    if (has('skills')) {
+      const skills = [...new Set([...(c.skills || []), ...getLanguages().slice(0, 10).map(([name]) => name)])].slice(0, 32);
+      if (skills.length) add('## 🧰 Tech stack & skills', '', skills.map(skill => `- ${CATALOG.tech?.[skill]?.icon || '✦'} ${skill}`).join('\n'), '');
+    }
+    if (has('projects')) {
+      add('## 🚀 Featured projects', '');
+      const repos = getSelectedRepos();
+      if (!repos.length) add('_No featured repositories selected yet._', '');
+      repos.forEach(repo => add(`### ${markdownLink(repo.name, repo.html_url)}`, '', escapeMarkdown(repo.description || 'A public repository. Explore the source and documentation.'), '', `**${escapeMarkdown(repo.language || 'Code')}** · ⭐ ${repo.stargazers_count || 0} · ⑂ ${repo.forks_count || 0}`, ''));
+    }
+    if (has('stats')) add('## 📊 GitHub statistics', '', `![GitHub statistics](assets/${slug(state.username)}-stats.svg)`, '');
+    if (has('activity')) add('## 🟩 Contribution activity', '', `![Contribution heatmap](assets/${slug(state.username)}-heatmap.svg)`, '');
+    if (has('experience')) {
+      const rows = parsePipeLines(c.experience);
+      if (rows.length) add('## 💼 Experience', '', rows.map(row => `- **${row.title}**${row.organization ? ` · ${row.organization}` : ''}${row.period ? ` (${row.period})` : ''}${row.detail ? `\n  ${row.detail}` : ''}`).join('\n'), '');
+    }
+    if (has('education')) {
+      const rows = parsePipeLines(c.education);
+      if (rows.length) add('## 🎓 Education', '', rows.map(row => `- **${row.title}**${row.organization ? ` · ${row.organization}` : ''}${row.period ? ` (${row.period})` : ''}${row.detail ? `\n  ${row.detail}` : ''}`).join('\n'), '');
+    }
+    if (has('achievements')) {
+      const achievements = String(c.achievements || '').split(/\r?\n/).map(item => item.trim()).filter(Boolean);
+      if (achievements.length) add('## 🏆 Achievements & certifications', '', achievements.map(item => `- 🏅 ${item}`).join('\n'), '');
+    }
+    if (has('connect')) {
+      const links = selectedLinks();
+      if (links.length) add('## 🔗 Connect', '', links.map(link => `- ${markdownLink(link.label, link.url)}`).filter(Boolean).join('\n'), '');
+    }
+    if (has('support') && c.support && normalizeUrl(c.support)) add('## ☕ Support my work', '', `If my work has been useful to you, you can [support future experiments](${normalizeUrl(c.support)}).`, '');
+    add('---', `<!-- ProfileForge · ${template().name} · ${theme().name} -->`);
+    return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  }
+  function renderMarkdown() { if ($('#markdownCanvas')) $('#markdownCanvas').textContent = buildMarkdown(); }
+  function renderGoalGrid() {
+    $('#goalGrid').innerHTML = GOALS.map(goal => `<button type="button" class="goal-btn ${state.goal === goal.id ? 'active' : ''}" data-goal="${goal.id}" title="${escapeHtml(goal.desc)}"><b>${goal.icon} ${escapeHtml(goal.name)}</b><small>${escapeHtml(goal.desc)}</small></button>`).join('');
+  }
+  function renderTemplateList() {
+    const recent = TEMPLATES.filter(item => ['aurora', 'recruiter', 'maintainer', 'minimal', 'matrix', 'frosted'].includes(item.id));
+    $('#templateList').innerHTML = recent.map(item => `<button type="button" class="template-btn ${state.template === item.id ? 'active' : ''}" data-template="${item.id}"><span class="template-meta"><span class="template-icon">${item.icon}</span>${escapeHtml(item.name)}</span><span>›</span></button>`).join('');
+  }
+  function renderTimeline() {
+    $('#timeline').innerHTML = state.sections.map((id, index) => {
+      const item = section(id);
+      return `<div class="timeline-item" data-section="${id}"><span class="timeline-icon">${item.icon}</span><b>${escapeHtml(item.name)}</b><small>${String(index + 1).padStart(2, '0')} / ${escapeHtml(item.desc)}</small><div class="timeline-controls"><button type="button" data-move="up" aria-label="Move ${escapeHtml(item.name)} up" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" data-move="down" aria-label="Move ${escapeHtml(item.name)} down" ${index === state.sections.length - 1 ? 'disabled' : ''}>↓</button><button type="button" data-move="remove" aria-label="Remove ${escapeHtml(item.name)}">×</button></div></div>`;
+    }).join('');
+    const available = SECTIONS.filter(item => !state.sections.includes(item.id));
+    $('#addSectionSelect').innerHTML = available.map(item => `<option value="${item.id}">${item.icon} ${escapeHtml(item.name)}</option>`).join('') || '<option value="">All sections added</option>';
+    $('#addSectionBtn').disabled = !available.length;
+  }
+  function renderSignals() {
+    const stats = getStats();
+    $('#signalGrid').innerHTML = [
+      ['Stars', stats.stars], ['Followers', stats.followers], ['Repositories', stats.repos], ['Forks', stats.forks]
+    ].map(([label, value]) => `<div class="signal"><b>${formatNumber(value)}</b><span>${label}</span></div>`).join('');
+    const langs = getLanguages().slice(0, 5);
+    const total = langs.reduce((sum, [, value]) => sum + value, 0) || 1;
+    $('#languageSummary').innerHTML = langs.length ? langs.map(([name, count]) => `<div class="language-row"><span>${escapeHtml(name)}</span><span class="lang-track"><i style="width:${Math.max(4, count / total * 100)}%"></i></span><em>${Math.round(count / total * 100)}%</em></div>`).join('') : '<span class="empty-note">Scan a profile to see its language signal.</span>';
+  }
+  function sortRepositories(repositories) {
+    const mode = $('#projectSortSelect')?.value || 'stars';
+    return [...repositories].sort((a, b) => {
+      if (mode === 'updated') return new Date(b.pushed_at || b.updated_at) - new Date(a.pushed_at || a.updated_at);
+      if (mode === 'forks') return (b.forks_count || 0) - (a.forks_count || 0);
+      if (mode === 'name') return a.name.localeCompare(b.name);
+      return (b.stargazers_count || 0) - (a.stargazers_count || 0);
+    });
+  }
+  function renderProjects() {
+    const query = ($('#projectSearchInput')?.value || '').trim().toLowerCase();
+    const list = sortRepositories(state.repos).filter(repo => `${repo.name} ${repo.description || ''} ${repo.language || ''}`.toLowerCase().includes(query)).slice(0, 55);
+    $('#projectPicker').innerHTML = list.length ? list.map(repo => `<label class="project-item"><input type="checkbox" data-repo="${escapeHtml(repo.full_name)}" ${state.selectedRepos.includes(repo.full_name) ? 'checked' : ''}><span><b>${escapeHtml(repo.name)} <em class="project-stars">★ ${formatNumber(repo.stargazers_count)}</em></b><small>${escapeHtml(repo.language || 'Code')} · ${escapeHtml(repo.visibility || 'public')} · ${formatNumber(repo.forks_count)} forks</small></span></label>`).join('') : `<span class="empty-note">${state.repos.length ? 'No repositories match this filter.' : 'Scan a GitHub profile to load repositories.'}</span>`;
+  }
+  function renderThemeGrid() {
+    const quick = THEMES.slice(0, 16);
+    $('#themeGrid').innerHTML = quick.map(item => `<button type="button" class="theme-btn ${state.theme === item.id ? 'active' : ''}" data-theme="${item.id}" style="--t1:${item.a};--t2:${item.b}" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>`).join('');
+  }
+  function renderTemplateCatalog() {
+    const query = ($('#templateSearchInput')?.value || '').trim().toLowerCase();
+    const category = $('#templateCategorySelect')?.value || 'all';
+    const list = TEMPLATES.filter(item => (category === 'all' || item.category === category) && `${item.name} ${item.category} ${item.desc}`.toLowerCase().includes(query));
+    $('#catalogGrid').innerHTML = list.map(item => `<article class="catalog-card ${state.template === item.id ? 'active' : ''}" style="--card-accent:${theme().a}"><div class="catalog-card-top"><span class="catalog-icon">${item.icon}</span><span class="catalog-category">${escapeHtml(item.category)}</span></div><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.desc)}</p><div class="catalog-card-bottom"><span class="section-count">${item.sections.length} sections · ${item.sections.map(id => section(id).name).slice(0, 2).join(' + ')}</span><button type="button" class="use-template" data-template="${item.id}">${state.template === item.id ? 'Selected ✓' : 'Use template'}</button></div></article>`).join('') || '<span class="empty-note">No templates match this filter.</span>';
+  }
+  function renderThemeCatalog() {
+    const query = ($('#themeSearchInput')?.value || '').trim().toLowerCase();
+    const list = THEMES.filter(item => item.name.toLowerCase().includes(query));
+    $('#themeCatalog').innerHTML = list.map(item => `<button type="button" class="theme-swatch-card ${state.theme === item.id ? 'active' : ''}" data-theme="${item.id}"><div class="theme-swatch" style="--swatch-a:${item.a};--swatch-b:${item.b}"></div><b>${escapeHtml(item.name)}</b><small>${item.a} · ${item.b}</small></button>`).join('') || '<span class="empty-note">No theme found.</span>';
+  }
+  function renderHeroDemo() {
+    const c = state.content;
+    $('#heroDemoName').textContent = c.name || state.profile?.name || 'Your profile';
+    $('#heroDemoHandle').textContent = `@${state.username || 'yourusername'}`;
+    $('#heroDemoHeadline').textContent = c.headline || 'A profile with a clear point of view.';
+    const stats = getStats();
+    $('#heroDemoRepos').textContent = formatNumber(stats.repos);
+    $('#heroDemoStars').textContent = formatNumber(stats.stars);
+    $('#heroDemoFollowers').textContent = formatNumber(stats.followers);
+    if (!$('#heroHeatmap').children.length) $('#heroHeatmap').innerHTML = Array.from({ length: 104 }, (_, i) => `<i style="opacity:${[.07,.15,.3,.5,.78][(i * 7) % 5]}"></i>`).join('');
+  }
+  function renderAll() {
+    applyTheme();
+    renderGoalGrid();
+    renderTemplateList();
+    renderThemeGrid();
+    renderTimeline();
+    renderSignals();
+    renderProjects();
+    renderTemplateCatalog();
+    renderThemeCatalog();
+    syncInputs();
+    renderPreview();
+    renderMarkdown();
+    renderHeroDemo();
+    updateView();
+  }
+  function updateView() {
+    $$('.view-tab').forEach(button => button.classList.toggle('active', button.dataset.view === state.view));
+    $('#previewCanvas').classList.toggle('hidden', state.view === 'markdown');
+    $('#markdownCanvas').classList.toggle('hidden', state.view !== 'markdown');
+    $('#previewCanvas').classList.toggle('github-mode', state.view === 'github');
+    $('#previewFrame').classList.toggle('markdown-mode', state.view === 'markdown');
+  }
+  function applyTemplate(id) {
+    const chosen = TEMPLATES.find(item => item.id === id);
+    if (!chosen) return;
+    state.template = chosen.id;
+    state.sections = [...chosen.sections];
+    writeQuery();
+    renderAll();
+    persist();
+    toast(`${chosen.name} template applied`);
+  }
+  function applyThemeId(id) {
+    if (!THEMES.some(item => item.id === id)) return;
+    state.theme = id;
+    writeQuery();
+    renderAll();
+    persist();
+    toast(`${theme().name} theme applied`);
+  }
+  function improveCopy() {
+    const c = state.content;
+    const languages = getLanguages().slice(0, 3).map(([name]) => name);
+    const projects = getSelectedRepos().slice(0, 2).map(repo => repo.name);
+    const topLanguages = languages.join(', ') || (c.skills.slice(0, 3).join(', ') || 'software development');
+    const lead = {
+      hired: `Software developer focused on ${topLanguages}, building reliable products and solving practical problems.`,
+      opensource: `Open-source builder working with ${topLanguages}; interested in maintainable tools, clear documentation and useful community projects.`,
+      freelance: `Independent developer helping turn product ideas into reliable digital experiences with ${topLanguages}.`,
+      founder: `Product-minded engineer building useful products with ${topLanguages}, from the first prototype to a dependable release.`,
+      student: `Computer engineering student exploring ${topLanguages} through hands-on projects, continuous learning and open experimentation.`,
+      research: `Technology enthusiast exploring software systems and applied engineering through research, prototypes and reproducible work.`,
+      creator: `Creative technologist combining ${topLanguages} with design, 3D experiments and interactive ideas.`,
+      general: `Developer building practical software with ${topLanguages} and sharing the process in public.`
+    };
+    c.headline = lead[state.goal] || lead.general;
+    if (!c.about || c.about.length < 28) {
+      const proof = projects.length ? ` Recent work includes ${projects.join(' and ')}.` : ' I enjoy shipping practical projects and learning by building.';
+      c.about = `I am a developer who values useful products, thoughtful engineering and continuous improvement.${proof} My current focus is ${topLanguages}.`;
+    }
+    syncInputs();
+    renderPreview(); renderMarkdown(); renderHeroDemo(); persist();
+    $('#suggestionBox').textContent = 'Updated your headline and, when needed, your introduction using your selected objective, repository languages and featured projects. Review the result before publishing.';
+    toast('Profile copy refreshed');
+  }
+  function makeHeroSvg() {
+    const c = state.content;
+    const t = theme();
+    const name = escapeXml(c.name || state.profile?.name || state.username);
+    const headline = escapeXml(c.headline || 'Building useful things in public.');
+    const handle = escapeXml(`@${state.username}`);
+    const width = 1200, height = 320;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${t.a}"/><stop offset="1" stop-color="${t.b}"/></linearGradient><radialGradient id="glow"><stop stop-color="${t.a}" stop-opacity=".32"/><stop offset="1" stop-color="${t.a}" stop-opacity="0"/></radialGradient></defs><rect width="1200" height="320" rx="28" fill="${t.bg}"/><circle cx="1070" cy="35" r="250" fill="url(#glow)"/><circle cx="80" cy="310" r="190" fill="${t.b}" opacity=".07"/><rect x="28" y="28" width="1144" height="264" rx="22" fill="${t.surface}" stroke="#ffffff" stroke-opacity=".14"/><rect x="70" y="88" width="76" height="76" rx="23" fill="url(#g)"/><text x="108" y="136" text-anchor="middle" fill="${t.bg}" font-family="Arial,sans-serif" font-size="32" font-weight="700">${escapeXml((c.name || state.username).slice(0, 1).toUpperCase())}</text><text x="180" y="104" fill="${t.b}" font-family="Arial,sans-serif" font-size="17" font-weight="700">${handle}</text><text x="180" y="158" fill="${t.text}" font-family="Arial,sans-serif" font-size="43" font-weight="700">${name.slice(0, 36)}</text><text x="180" y="202" fill="${t.muted}" font-family="Arial,sans-serif" font-size="19">${headline.slice(0, 78)}</text><rect x="180" y="228" width="185" height="36" rx="18" fill="url(#g)"/><text x="272" y="251" text-anchor="middle" fill="${t.bg}" font-family="Arial,sans-serif" font-size="12" font-weight="700">PROFILEFORGE</text><text x="1100" y="255" text-anchor="end" fill="${t.muted}" font-family="monospace" font-size="11" letter-spacing="2">GITHUB / IDENTITY</text></svg>`;
+  }
+  function makeStatsSvg() {
+    const t = theme();
+    const stats = getStats();
+    const items = [['REPOSITORIES', stats.repos], ['STARS EARNED', stats.stars], ['FOLLOWERS', stats.followers], ['FORKS', stats.forks]];
+    const cards = items.map(([label, value], index) => {
+      const x = 20 + index * 292;
+      return `<rect x="${x}" y="22" width="270" height="126" rx="17" fill="${t.surface}" stroke="#ffffff" stroke-opacity=".14"/><text x="${x + 22}" y="58" fill="${t.muted}" font-family="Arial,sans-serif" font-size="12" letter-spacing="1.6">${label}</text><text x="${x + 22}" y="112" fill="${index % 2 ? t.b : t.a}" font-family="Arial,sans-serif" font-size="39" font-weight="700">${escapeXml(formatNumber(value))}</text>`;
+    }).join('');
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="170" viewBox="0 0 1200 170"><rect width="1200" height="170" rx="22" fill="${t.bg}"/>${cards}</svg>`;
+  }
+  function makeHeatmapSvg() {
+    const t = theme();
+    const days = contributionLevels();
+    const cells = days.map((day, index) => {
+      const x = 34 + Math.floor(index / 7) * 18;
+      const y = 52 + (index % 7) * 17;
+      const opacity = day.level === 0 ? .09 : .3 + day.level * .16;
+      return `<rect x="${x}" y="${y}" width="12" height="12" rx="3" fill="${day.level >= 4 ? t.b : t.a}" opacity="${opacity.toFixed(2)}"><title>${day.count} contributions on ${day.date}</title></rect>`;
+    }).join('');
+    const total = getStats().contributions;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="190" viewBox="0 0 1040 190"><rect width="1040" height="190" rx="20" fill="${t.bg}"/><text x="32" y="29" fill="${t.text}" font-family="Arial,sans-serif" font-size="14" font-weight="700">CONTRIBUTION ACTIVITY</text><text x="1008" y="29" text-anchor="end" fill="${t.muted}" font-family="Arial,sans-serif" font-size="12">${escapeXml(formatNumber(total))} CONTRIBUTIONS</text>${cells}<text x="32" y="179" fill="${t.muted}" font-family="Arial,sans-serif" font-size="10">LESS</text><rect x="68" y="168" width="10" height="10" rx="2" fill="${t.a}" opacity=".12"/><rect x="84" y="168" width="10" height="10" rx="2" fill="${t.a}" opacity=".4"/><rect x="100" y="168" width="10" height="10" rx="2" fill="${t.a}" opacity=".7"/><rect x="116" y="168" width="10" height="10" rx="2" fill="${t.b}"/><text x="135" y="179" fill="${t.muted}" font-family="Arial,sans-serif" font-size="10">MORE</text></svg>`;
+  }
+  function automationScript() {
+    const selectedTheme = theme();
+    return `import fs from 'node:fs/promises';\nimport path from 'node:path';\n\nconst username = process.argv[2] || process.env.GITHUB_REPOSITORY_OWNER;\nif (!username) throw new Error('Pass a GitHub username or set GITHUB_REPOSITORY_OWNER.');\nconst safe = username.toLowerCase().replace(/[^a-z0-9-]/g, '');\nconst accent = '${selectedTheme.a}';\nconst accent2 = '${selectedTheme.b}';\nconst response = await fetch(\`https://github-contributions-api.jogruber.de/v4/\${encodeURIComponent(safe)}?y=last\`);\nif (!response.ok) throw new Error(\`Contribution source returned HTTP \${response.status}\`);\nconst payload = await response.json();\nconst days = Array.isArray(payload.contributions) ? payload.contributions : [];\nconst cells = days.slice(-371).map((item, index) => {\n  const column = Math.floor(index / 7); const row = index % 7;\n  const count = Number(item.count) || 0;\n  const level = count === 0 ? 0 : count <= 2 ? 1 : count <= 5 ? 2 : count <= 9 ? 3 : 4;\n  const opacity = level === 0 ? 0.09 : 0.3 + level * 0.16;\n  return \`<rect x="\${30 + column * 16}" y="48" width="11" height="11" rx="2" fill="\${accent}" opacity="\${opacity}"><title>\${count} contributions · \${item.date || ''}</title></rect>\`;\n}).join('');\nconst svg = \`<svg xmlns="http://www.w3.org/2000/svg" width="920" height="170" viewBox="0 0 920 170"><rect width="920" height="170" rx="18" fill="#0b1220"/><text x="30" y="28" fill="\${accent2}" font-family="Arial" font-size="13" font-weight="700">CONTRIBUTION ACTIVITY · \${safe}</text>\${cells}</svg>\`;\nconst out = path.join(process.cwd(), 'assets', \`\${safe}-heatmap.svg\`);\nawait fs.mkdir(path.dirname(out), { recursive: true });\nawait fs.writeFile(out, svg, 'utf8');\nconsole.log(\`Updated \${out}; \${days.length} calendar days. README.md was not changed.\`);\n`;
+  }
+  function workflowFile() {
+    return `name: Refresh contribution asset\n\non:\n  workflow_dispatch:\n  schedule:\n    - cron: '17 4 * * 1'\n\npermissions:\n  contents: write\n\njobs:\n  refresh:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: 22\n      - name: Refresh contribution SVG\n        run: node scripts/refresh-profile.mjs \"$GITHUB_REPOSITORY_OWNER\"\n      - name: Commit updated asset\n        run: |\n          git config user.name 'github-actions[bot]'\n          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'\n          git add assets/*-heatmap.svg\n          git diff --cached --quiet && exit 0\n          git commit -m 'chore: refresh contribution asset'\n          git push\n`;
+  }
+  function publishingGuide() {
+    return `# Publish your ProfileForge README\n\n1. Create a **public** GitHub repository whose name exactly matches your GitHub username.\n2. Extract this package and upload \`README.md\` and the complete \`assets/\` folder to the repository root.\n3. Open your profile at \`https://github.com/USERNAME\`. The README appears on the profile automatically.\n4. To enable contribution asset refresh, also upload \`scripts/refresh-profile.mjs\` and \`.github/workflows/refresh-profile-assets.yml\`.\n5. Open the repository's **Actions** tab and run **Refresh contribution asset** once manually. The workflow only updates the SVG asset; it never overwrites README.md.\n\n## Important notes\n\n- The generated README is regular Markdown and works without ProfileForge.\n- Local SVG files must be uploaded with the README.\n- The contribution calendar uses a public community data source and can occasionally be unavailable. Other profile data is still valid.\n- The browser scanner uses GitHub's unauthenticated public API. Its hourly rate limit is controlled by GitHub.\n- Never put a personal access token in a public GitHub Pages repository.\n`;
+  }
+  function createPackageFiles() {
+    const userSlug = slug(state.username);
+    return [
+      { name: 'README.md', data: buildMarkdown() },
+      { name: `assets/${userSlug}-hero.svg`, data: makeHeroSvg() },
+      { name: `assets/${userSlug}-stats.svg`, data: makeStatsSvg() },
+      { name: `assets/${userSlug}-heatmap.svg`, data: makeHeatmapSvg() },
+      { name: 'PROFILEFORGE-PUBLISHING.md', data: publishingGuide() },
+      { name: 'profileforge-draft.json', data: JSON.stringify(state, null, 2) + '\n' },
+      { name: 'scripts/refresh-profile.mjs', data: automationScript() },
+      { name: '.github/workflows/refresh-profile-assets.yml', data: workflowFile() }
+    ];
+  }
+  function crc32(bytes) {
+    let crc = 0xffffffff;
+    for (let i = 0; i < bytes.length; i += 1) {
+      crc ^= bytes[i];
+      for (let j = 0; j < 8; j += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+    }
+    return (crc ^ 0xffffffff) >>> 0;
+  }
+  function zipBlob(files) {
+    const encoder = new TextEncoder();
+    const localParts = [];
+    const centralParts = [];
+    let offset = 0;
+    const dosTime = 0;
+    const dosDate = ((2024 - 1980) << 9) | (1 << 5) | 1;
+    const writeHeader = (length, build) => { const bytes = new Uint8Array(length); build(new DataView(bytes.buffer)); return bytes; };
+    files.forEach(file => {
+      const name = encoder.encode(file.name);
+      const data = encoder.encode(file.data);
+      const crc = crc32(data);
+      const local = writeHeader(30, view => {
+        view.setUint32(0, 0x04034b50, true); view.setUint16(4, 20, true); view.setUint16(6, 0x0800, true);
+        view.setUint16(8, 0, true); view.setUint16(10, dosTime, true); view.setUint16(12, dosDate, true);
+        view.setUint32(14, crc, true); view.setUint32(18, data.length, true); view.setUint32(22, data.length, true);
+        view.setUint16(26, name.length, true); view.setUint16(28, 0, true);
+      });
+      localParts.push(local, name, data);
+      const central = writeHeader(46, view => {
+        view.setUint32(0, 0x02014b50, true); view.setUint16(4, 20, true); view.setUint16(6, 20, true);
+        view.setUint16(8, 0x0800, true); view.setUint16(10, 0, true); view.setUint16(12, dosTime, true); view.setUint16(14, dosDate, true);
+        view.setUint32(16, crc, true); view.setUint32(20, data.length, true); view.setUint32(24, data.length, true);
+        view.setUint16(28, name.length, true); view.setUint16(30, 0, true); view.setUint16(32, 0, true);
+        view.setUint16(34, 0, true); view.setUint16(36, 0, true); view.setUint32(38, 0, true); view.setUint32(42, offset, true);
+      });
+      centralParts.push(central, name);
+      offset += local.length + name.length + data.length;
+    });
+    const centralSize = centralParts.reduce((sum, part) => sum + part.length, 0);
+    const end = writeHeader(22, view => {
+      view.setUint32(0, 0x06054b50, true); view.setUint16(4, 0, true); view.setUint16(6, 0, true);
+      view.setUint16(8, files.length, true); view.setUint16(10, files.length, true);
+      view.setUint32(12, centralSize, true); view.setUint32(16, offset, true); view.setUint16(20, 0, true);
+    });
+    return new Blob([...localParts, ...centralParts, end], { type: 'application/zip' });
+  }
+  function downloadBlob(filename, blob) {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url; anchor.download = filename; anchor.style.display = 'none';
+    document.body.appendChild(anchor); anchor.click(); anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+  function downloadText(filename, text, type = 'text/plain;charset=utf-8') {
+    downloadBlob(filename, new Blob([text], { type }));
+  }
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard?.writeText && window.isSecureContext) await navigator.clipboard.writeText(text);
+      else {
+        const helper = document.createElement('textarea'); helper.value = text; helper.style.position = 'fixed'; helper.style.opacity = '0';
+        document.body.appendChild(helper); helper.select();
+        const copied = document.execCommand('copy'); helper.remove();
+        if (!copied) throw new Error('Clipboard is not available in this browser.');
+      }
+      return true;
+    } catch (error) { toast(error.message || 'Could not copy to clipboard'); return false; }
+  }
+  function openExportModal() {
+    const files = createPackageFiles();
+    $('#exportFileList').innerHTML = files.map(file => `<div class="export-file"><b>✓</b>${escapeHtml(file.name)}</div>`).join('');
+    $('#exportModalText').textContent = `Ready to create a ${files.length}-file README package for @${state.username}.`;
+    $('#exportModal').classList.remove('hidden');
+  }
+  function exportZip() {
+    const files = createPackageFiles();
+    const blob = zipBlob(files);
+    downloadBlob(`${slug(state.username)}-profileforge.zip`, blob);
+    $('#exportModal').classList.add('hidden');
+    toast('README package downloaded');
+  }
+  function exportDraftJson() {
+    downloadText(`${slug(state.username)}-profileforge-draft.json`, JSON.stringify(state, null, 2) + '\n', 'application/json;charset=utf-8');
+    toast('Editable draft exported');
+  }
+  async function importDraft(file) {
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!data || typeof data !== 'object' || !data.content || typeof data.content !== 'object') throw new Error('This file is not a valid ProfileForge draft.');
+      state = {
+        ...structuredCloneSafe(DEFAULT_STATE), ...data,
+        settings: { ...DEFAULT_STATE.settings, ...(data.settings || {}) },
+        content: sanitizeContent(data.content || {}),
+        sections: Array.isArray(data.sections) ? data.sections.filter(id => SECTIONS.some(s => s.id === id)) : [...DEFAULT_SECTIONS],
+        repos: Array.isArray(data.repos) ? data.repos : [], selectedRepos: Array.isArray(data.selectedRepos) ? data.selectedRepos : [],
+        languages: data.languages && typeof data.languages === 'object' ? data.languages : {}, contributions: Array.isArray(data.contributions) ? data.contributions.filter(item => item && item.date) : [],
+        username: typeof data.username === 'string' && /^[a-zA-Z0-9-]{1,39}$/.test(data.username) ? data.username : DEFAULT_STATE.username,
+        goal: GOALS.some(item => item.id === data.goal) ? data.goal : DEFAULT_STATE.goal,
+        template: TEMPLATES.some(item => item.id === data.template) ? data.template : DEFAULT_STATE.template,
+        theme: THEMES.some(item => item.id === data.theme) ? data.theme : DEFAULT_STATE.theme,
+        view: ['preview', 'github', 'markdown'].includes(data.view) ? data.view : 'preview',
+        density: ['compact', 'balanced', 'spacious'].includes(data.density) ? data.density : 'balanced'
+      };
+      writeQuery(); renderAll(); persist();
+      toast('Draft imported successfully');
+    } catch (error) { toast(error.message || 'Could not import draft'); }
+    finally { $('#importJsonInput').value = ''; }
+  }
+  function resetDraft() {
+    if (!confirm('Reset the complete local ProfileForge draft? This removes the saved content and scan cache from this browser.')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    state = structuredCloneSafe(DEFAULT_STATE);
+    writeQuery(); syncInputs(); renderAll(); persist();
+    setScanState('', 'Waiting for a username');
+    toast('Local draft reset');
+  }
+  function bindEvents() {
+    $('#heroStartBtn').addEventListener('click', () => { $('#studio').scrollIntoView({ behavior: 'smooth' }); setTimeout(() => $('#usernameInput').focus(), 400); });
+    $('#scanBtn').addEventListener('click', () => scanGitHub());
+    $('#usernameInput').addEventListener('keydown', event => { if (event.key === 'Enter') scanGitHub(); });
+    $('#sampleBtn').addEventListener('click', () => scanGitHub('octocat'));
+    $('#goalGrid').addEventListener('click', event => {
+      const button = event.target.closest('[data-goal]'); if (!button) return;
+      state.goal = button.dataset.goal;
+      if (!state.content.headline || state.content.headline === inferHeadline()) state.content.headline = inferHeadline();
+      writeQuery(); renderAll(); persist(); toast(`${GOALS.find(item => item.id === state.goal)?.name || 'Objective'} selected`);
+    });
+    $('#templateList').addEventListener('click', event => { const button = event.target.closest('[data-template]'); if (button) applyTemplate(button.dataset.template); });
+    $('#catalogGrid').addEventListener('click', event => { const button = event.target.closest('[data-template]'); if (button) { applyTemplate(button.dataset.template); $('#studio').scrollIntoView({ behavior: 'smooth' }); } });
+    $('#themeGrid').addEventListener('click', event => { const button = event.target.closest('[data-theme]'); if (button) applyThemeId(button.dataset.theme); });
+    $('#themeCatalog').addEventListener('click', event => { const button = event.target.closest('[data-theme]'); if (button) { applyThemeId(button.dataset.theme); $('#studio').scrollIntoView({ behavior: 'smooth' }); } });
+    ['nameInput','headlineInput','aboutInput','locationInput','companyInput','websiteInput','emailInput','linksInput','skillsInput','experienceInput','educationInput','achievementsInput','supportInput'].forEach(id => $('#' + id).addEventListener('input', updateContentFromInput));
+    $('#projectPicker').addEventListener('change', event => {
+      const input = event.target.closest('[data-repo]'); if (!input) return;
+      const name = input.dataset.repo;
+      if (input.checked && !state.selectedRepos.includes(name)) {
+        const limit = Number(CFG.limits?.featuredProjects || 8);
+        if (state.selectedRepos.length >= limit) { input.checked = false; toast(`Choose up to ${limit} featured repositories.`); return; }
+        state.selectedRepos.push(name);
+      }
+      if (!input.checked) state.selectedRepos = state.selectedRepos.filter(item => item !== name);
+      persist(); renderPreview(); renderMarkdown(); renderHeroDemo();
+    });
+    $('#projectSearchInput').addEventListener('input', renderProjects);
+    $('#projectSortSelect').addEventListener('change', renderProjects);
+    $('#selectTopProjectsBtn').addEventListener('click', () => {
+      state.selectedRepos = sortRepositories(state.repos.filter(repo => !repo.fork)).slice(0, Number(CFG.limits?.featuredProjects || 8)).map(repo => repo.full_name);
+      renderProjects(); renderPreview(); renderMarkdown(); persist(); toast('Top repositories selected');
+    });
+    $('#densitySelect').addEventListener('change', event => { state.density = event.target.value; renderPreview(); persist(); });
+    $$('[data-setting]').forEach(input => input.addEventListener('change', () => {
+      state.settings[input.dataset.setting] = input.checked;
+      applyTheme(); renderPreview(); renderMarkdown(); persist();
+    }));
+    $$('.view-tab').forEach(button => button.addEventListener('click', () => { state.view = button.dataset.view; updateView(); persist(); }));
+    $$('.inspector-tab').forEach(button => button.addEventListener('click', () => {
+      $$('.inspector-tab').forEach(item => item.classList.toggle('active', item === button));
+      $$('.inspector-panel').forEach(item => item.classList.toggle('active', item.id === `inspector${button.dataset.inspector[0].toUpperCase()}${button.dataset.inspector.slice(1)}`));
+    }));
+    $('#timeline').addEventListener('click', event => {
+      const button = event.target.closest('[data-move]');
+      const item = event.target.closest('[data-section]');
+      if (!button || !item) return;
+      const index = state.sections.indexOf(item.dataset.section);
+      const action = button.dataset.move;
+      if (action === 'remove') state.sections = state.sections.filter(id => id !== item.dataset.section);
+      if (action === 'up' && index > 0) [state.sections[index - 1], state.sections[index]] = [state.sections[index], state.sections[index - 1]];
+      if (action === 'down' && index >= 0 && index < state.sections.length - 1) [state.sections[index + 1], state.sections[index]] = [state.sections[index], state.sections[index + 1]];
+      renderTimeline(); renderPreview(); renderMarkdown(); persist();
+    });
+    $('#addSectionBtn').addEventListener('click', () => {
+      const id = $('#addSectionSelect').value;
+      if (!id || state.sections.includes(id)) return;
+      state.sections.push(id); renderTimeline(); renderPreview(); renderMarkdown(); persist(); toast(`${section(id).name} added`);
+    });
+    $('#resetSectionsBtn').addEventListener('click', () => { state.sections = [...(template().sections || DEFAULT_SECTIONS)]; renderTimeline(); renderPreview(); renderMarkdown(); persist(); toast('Template structure restored'); });
+    $('#browseTemplatesBtn').addEventListener('click', () => $('#templates').scrollIntoView({ behavior: 'smooth' }));
+    $('#browseThemesBtn').addEventListener('click', () => $('#themes').scrollIntoView({ behavior: 'smooth' }));
+    $('#templateSearchInput').addEventListener('input', renderTemplateCatalog);
+    $('#templateCategorySelect').addEventListener('change', renderTemplateCatalog);
+    $('#themeSearchInput').addEventListener('input', renderThemeCatalog);
+    $('#improveBtn').addEventListener('click', improveCopy);
+    $('#copyBtn').addEventListener('click', async () => { if (await copyText(buildMarkdown())) toast('README Markdown copied'); });
+    $('#downloadBtn').addEventListener('click', () => { downloadText('README.md', buildMarkdown(), 'text/markdown;charset=utf-8'); toast('README.md downloaded'); });
+    $('#exportBtn').addEventListener('click', openExportModal);
+    $('#exportTopBtn').addEventListener('click', openExportModal);
+    $('#confirmExportBtn').addEventListener('click', exportZip);
+    $('#exportReadmeOnlyBtn').addEventListener('click', () => { downloadText('README.md', buildMarkdown(), 'text/markdown;charset=utf-8'); $('#exportModal').classList.add('hidden'); toast('README.md downloaded'); });
+    $('#closeExportModal').addEventListener('click', () => $('#exportModal').classList.add('hidden'));
+    $('#exportModal').addEventListener('click', event => { if (event.target === event.currentTarget) event.currentTarget.classList.add('hidden'); });
+    $('#copyLinkBtn').addEventListener('click', async () => { writeQuery(); if (await copyText(location.href)) toast('Shareable settings link copied'); });
+    $('#exportJsonBtn').addEventListener('click', exportDraftJson);
+    $('#importJsonInput').addEventListener('change', event => importDraft(event.target.files?.[0]));
+    $('#resetDraftBtn').addEventListener('click', resetDraft);
+    $('#mobileMenuBtn').addEventListener('click', () => $('#topnav')?.classList.toggle('open'));
+    $$('.topnav a').forEach(link => link.addEventListener('click', () => $('.topnav')?.classList.remove('open')));
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') $('#exportModal').classList.add('hidden'); });
+  }
+  function populateTemplateCategories() {
+    const categories = [...new Set(TEMPLATES.map(item => item.category))].sort();
+    $('#templateCategorySelect').innerHTML = '<option value="all">All categories</option>' + categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('');
+  }
+  function init() {
+    restore();
+    applyQuery();
+    populateTemplateCategories();
+    bindEvents();
+    $('#yearNow').textContent = new Date().getFullYear();
+    $('#usernameInput').value = state.username;
+    if (state.profile) setScanState('success', `Restored ${state.repos.length} cached repositories`);
+    else setScanState('', 'Waiting for a username');
+    renderAll();
+    if (state.profile) {
+      $('#workspaceStatus').textContent = 'Restored local profile cache';
+    }
+    persist();
+    // The app remains usable without a network connection; scan only when there is no cached profile.
+    if (!state.profile && state.username) scanGitHub(state.username);
+  }
+  document.addEventListener('DOMContentLoaded', init);
 })();
-document.addEventListener('DOMContentLoaded',App.init);

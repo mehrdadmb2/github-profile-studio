@@ -1,226 +1,211 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="aurora">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b0f14">
-  <meta name="description" content="A GitHub README Studio with real public GitHub data, visual templates, themes and exportable README packages.">
-  <title>ProfileForge — GitHub README Studio</title>
+  <meta name="theme-color" content="#080d18">
+  <meta name="description" content="Build a polished GitHub profile README with live public data, flexible sections, premium themes and a complete export package.">
+  <meta property="og:title" content="ProfileForge — GitHub Profile Studio">
+  <meta property="og:description" content="Turn your GitHub profile into a professional, personal README.">
+  <meta property="og:image" content="assets/social-preview.svg">
+  <title>ProfileForge — GitHub Profile Studio</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div><div class="noise-layer"></div>
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="ProfileForge home">
-        <span class="brand-mark">PF</span>
-        <span class="brand-name">Profile<span>Forge</span></span>
+      <a class="brand" href="#home" aria-label="ProfileForge home">
+        <img src="assets/brand-mark.svg" alt="" class="brand-logo">
+        <span class="brand-copy"><strong>Profile<span>Forge</span></strong><small>GITHUB IDENTITY STUDIO</small></span>
       </a>
-      <nav class="topnav" aria-label="Primary">
-        <a href="#studio">Studio</a>
-        <a href="#templates">Templates</a>
-        <a href="#themes">Themes</a>
-        <a href="#docs">Docs</a>
+      <nav class="topnav" id="topnav" aria-label="Main navigation">
+        <a href="#studio">Studio</a><a href="#templates">Templates</a><a href="#themes">Themes</a><a href="#docs">Guide</a>
       </nav>
       <div class="top-actions">
-        <button class="ghost-btn" id="sampleBtn">Use sample</button>
-        <button class="primary-btn" id="exportBtn">Export package</button>
+        <button class="btn btn-quiet" id="sampleBtn" type="button"><span>✦</span> Load demo</button>
+        <button class="btn btn-primary" id="exportTopBtn" type="button"><span>↧</span> Export package</button>
+        <button class="icon-button mobile-menu" id="mobileMenuBtn" aria-label="Open navigation" type="button">☰</button>
       </div>
     </header>
 
-    <section id="home" class="landing-hero">
-  <div class="landing-copy">
-    <span class="eyebrow">PROFILEFORGE / GITHUB IDENTITY SYSTEM</span>
-    <h1>Your GitHub work, beautifully presented.</h1>
-    <p>Scan any public GitHub profile, compare visual README systems, tune every section and export a publication-ready Markdown package.</p>
-    <div class="landing-actions"><button class="primary-btn" id="heroStartBtn">Build my README</button><a class="ghost-btn" href="#templates">Explore templates</a></div>
-    <div class="landing-proof"><span>● Real public GitHub data</span><span>● No sign-in to preview</span><span>● GitHub Pages ready</span></div>
-  </div>
-  <div class="landing-art">
-    <div class="art-glow"></div><div class="art-card art-back"><span>GITHUB SIGNAL</span><strong>23K</strong><small>stars indexed</small></div>
-    <div class="art-card art-main"><div class="art-mini-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div class="art-profile"><div class="art-avatar"></div><div><b>@octocat</b><small>Developer advocate</small></div></div><div class="art-bars"><i style="width:76%"></i><i style="width:54%"></i><i style="width:68%"></i></div><div class="art-grid">${Array.from({length:72},(_,i)=>`<span style="opacity:${.12+(i%6)*.14}"></span>`).join('')}</div></div>
-  </div>
-</section>
-
-<main id="studio" class="workspace">
-      <aside class="sidebar left-panel">
-        <div class="panel-heading">
-          <div>
-            <div class="eyebrow">README STUDIO</div>
-            <h1>Build a profile with a point of view.</h1>
-          </div>
-        </div>
-
-        <section class="panel-card scanner-card">
-          <div class="section-title"><span>01</span> GitHub profile</div>
-          <label class="field-label" for="usernameInput">Username</label>
-          <div class="input-row">
-            <span class="prefix">@</span>
-            <input id="usernameInput" autocomplete="off" spellcheck="false" placeholder="your-github-username">
-            <button class="icon-btn" id="scanBtn" title="Scan profile">↗</button>
-          </div>
-          <div class="hint" id="scanStatus">Public GitHub data only. No sign-in required.</div>
-        </section>
-
-        <section class="panel-card">
-          <div class="section-title"><span>02</span> Goal</div>
-          <div class="goal-grid" id="goalGrid"></div>
-        </section>
-
-        <section class="panel-card">
-          <div class="section-title"><span>03</span> Template</div>
-          <div class="template-list" id="templateList"></div>
-        </section>
-
-        <section class="panel-card">
-          <div class="section-title"><span>04</span> Visuals</div>
-          <div class="visual-list" id="visualList"></div>
-        </section>
-      </aside>
-
-      <section class="canvas-column">
-        <div class="canvas-toolbar">
-          <div class="canvas-tabs">
-            <button class="tab active" data-view="preview">Preview</button>
-            <button class="tab" data-view="github">GitHub view</button>
-            <button class="tab" data-view="markdown">Markdown</button>
-          </div>
-          <div class="toolbar-right">
-            <button class="pill-btn" id="themeQuickBtn">Theme</button>
-            <button class="pill-btn" id="copyBtn">Copy</button>
-            <button class="pill-btn" id="downloadBtn">README.md</button>
-          </div>
-        </div>
-
-        <div class="canvas-wrap">
-          <div class="canvas-grid"></div>
-          <article id="previewCanvas" class="readme-canvas"></article>
-          <pre id="markdownCanvas" class="markdown-canvas hidden" aria-label="Generated Markdown"></pre>
-        </div>
-      </section>
-
-      <aside class="sidebar right-panel">
-        <div class="panel-tabs">
-          <button class="panel-tab active" data-inspector="content">Content</button>
-          <button class="panel-tab" data-inspector="style">Style</button>
-          <button class="panel-tab" data-inspector="automation">Agent</button>
-        </div>
-
-        <div id="inspectorContent" class="inspector-pane active">
-          <section class="panel-card selected-card">
-            <div class="section-title"><span>EDITING</span><strong id="editingTitle">Header</strong></div>
-            <label class="field-label" for="headlineInput">Headline</label>
-            <input class="text-field" id="headlineInput" placeholder="A short, specific positioning line">
-            <label class="field-label" for="aboutInput">About</label>
-            <textarea class="text-field textarea" id="aboutInput" rows="5" placeholder="Write a concise developer story."></textarea>
-            <label class="field-label" for="linksInput">Links</label>
-            <textarea class="text-field textarea" id="linksInput" rows="4" placeholder="GitHub | LinkedIn | Website"></textarea>
-          </section>
-
-          <section class="panel-card">
-            <div class="section-title"><span>PROFILE SIGNAL</span></div>
-            <div class="signal-grid" id="signalGrid"></div>
-          </section>
-
-          <section class="panel-card">
-            <div class="section-title"><span>PROJECTS</span><button class="mini-btn" id="refreshProjectsBtn">Refresh</button></div>
-            <div class="project-picker" id="projectPicker"></div>
-          </section>
-        </div>
-
-        <div id="inspectorStyle" class="inspector-pane">
-          <section class="panel-card">
-            <div class="section-title"><span>THEME</span></div>
-            <div class="theme-grid" id="themeGrid"></div>
-          </section>
-          <section class="panel-card">
-            <div class="section-title"><span>DENSITY</span></div>
-            <div class="segmented" id="densityControl">
-              <button data-density="compact">Compact</button>
-              <button data-density="balanced" class="active">Balanced</button>
-              <button data-density="cinematic">Cinematic</button>
-            </div>
-          </section>
-          <section class="panel-card">
-            <div class="section-title"><span>EFFECTS</span></div>
-            <label class="toggle-row"><span>Glass panels</span><input type="checkbox" data-effect="glass" checked></label>
-            <label class="toggle-row"><span>Glow edges</span><input type="checkbox" data-effect="glow" checked></label>
-            <label class="toggle-row"><span>Noise texture</span><input type="checkbox" data-effect="noise" checked></label>
-          </section>
-        </div>
-
-        <div id="inspectorAutomation" class="inspector-pane">
-          <section class="panel-card">
-            <div class="section-title"><span>PROFILE AGENT</span></div>
-            <p class="agent-copy">This browser-only agent does not call an AI API. It derives suggestions from public GitHub signal, project topics, languages and the selected goal.</p>
-            <button class="primary-btn full" id="improveBtn">Improve my README</button>
-            <div class="suggestion-box" id="suggestionBox"></div>
-          </section>
-          <section class="panel-card">
-            <div class="section-title"><span>SHAREABLE STATE</span></div>
-            <button class="ghost-btn full" id="copyLinkBtn">Copy studio link</button>
-            <div class="hint">The URL stores username, template, theme and goal so you can share a draft.</div>
-          </section>
-        </div>
-      </aside>
-    </main>
-
-    <section class="timeline-bar" aria-label="README sections">
-      <div class="timeline-head">
-        <div><span class="eyebrow">README SECTIONS</span><strong>Structure your story</strong></div>
-        <button class="ghost-btn" id="resetSectionsBtn">Reset</button>
+    <section class="hero" id="home">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="live-dot"></span> THE GITHUB IDENTITY WORKBENCH <span class="version-pill">V3.0</span></div>
+        <h1>Make your GitHub<br><span class="gradient-text">impossible to overlook.</span></h1>
+        <p class="hero-lead">Turn public GitHub data into a profile README that feels like you. Shape the story, choose your visual system, and export every file you need to publish.</p>
+        <div class="hero-actions"><button class="btn btn-primary btn-large" id="heroStartBtn" type="button">Open the studio <span>↗</span></button><a class="btn btn-outline btn-large" href="#templates">Explore systems <span>⌁</span></a></div>
+        <div class="hero-trust"><span><i>✓</i> Real GitHub metadata</span><span><i>✓</i> No login required</span><span><i>✓</i> ZIP export, ready to publish</span></div>
       </div>
-      <div class="timeline" id="timeline"></div>
+      <div class="hero-visual" aria-label="Profile preview illustration">
+        <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="hero-glow"></div>
+        <div class="floating-chip chip-top"><span class="chip-icon">✧</span><span><b>IDENTITY SYSTEM</b><small>Personalized by you</small></span></div>
+        <div class="floating-chip chip-bottom"><span class="chip-icon">⌁</span><span><b>LIVE SIGNAL</b><small>Public GitHub data</small></span><span class="signal-pulse"></span></div>
+        <div class="hero-window glass-card">
+          <div class="window-head"><div class="window-dots"><i></i><i></i><i></i></div><span>github.com / profile</span><span class="window-lock">⌑</span></div>
+          <div class="window-body">
+            <div class="window-profile"><div class="demo-avatar">PF</div><div><b id="heroDemoName">Your profile</b><small id="heroDemoHandle">@yourusername</small></div><span class="verified-mark">✦</span></div>
+            <div class="demo-headline" id="heroDemoHeadline">A profile with a clear point of view.</div>
+            <div class="demo-tags"><span>⚡ Builder</span><span>⌘ Open source</span><span>✦ Creative</span></div>
+            <div class="demo-stats"><div><b id="heroDemoRepos">—</b><small>REPOSITORIES</small></div><div><b id="heroDemoStars">—</b><small>STARS</small></div><div><b id="heroDemoFollowers">—</b><small>FOLLOWERS</small></div></div>
+            <div class="demo-heatmap" id="heroHeatmap"></div>
+          </div>
+        </div>
+        <div class="hero-orbit-label">README / PORTFOLIO / SIGNALS</div>
+      </div>
     </section>
 
-    <section id="templates" class="catalog-section">
-      <div class="catalog-head">
-        <div><span class="eyebrow">TEMPLATE LIBRARY</span><h2>Start from a system, not a blank page.</h2></div>
-        <p>Every template is data-driven and can be populated with a real GitHub profile.</p>
+    <section class="stats-strip" aria-label="Studio capabilities">
+      <div><strong>24</strong><span>Visual themes</span></div><div><strong>16</strong><span>Profile systems</span></div><div><strong>12</strong><span>Composable sections</span></div><div><strong>100%</strong><span>Static & self-hostable</span></div>
+    </section>
+
+    <main id="studio" class="studio-section">
+      <div class="section-heading studio-heading"><div><span class="eyebrow">01 / THE WORKSPACE</span><h2>Build your signature profile.</h2><p>Scan once, customize everything. Your draft is saved locally as you work.</p></div><div class="workspace-state"><span class="state-dot"></span><span id="workspaceStatus">Local draft ready</span><kbd>LOCAL</kbd></div></div>
+      <div class="workspace-grid">
+        <aside class="left-rail">
+          <section class="control-card glass-card">
+            <div class="card-kicker"><span class="step-number">01</span><div><b>GitHub source</b><small>Bring in your public signal</small></div></div>
+            <label class="field-label" for="usernameInput">GitHub username</label>
+            <div class="input-with-button"><span class="input-prefix">@</span><input id="usernameInput" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="username"><button class="scan-button" id="scanBtn" type="button" aria-label="Scan GitHub profile">↗</button></div>
+            <div class="scan-meta"><span class="api-indicator" id="apiIndicator"></span><span id="scanStatus">Waiting for a username</span></div>
+            <div class="source-note">Only public GitHub API data is requested. No token is stored or required.</div>
+          </section>
+          <section class="control-card glass-card">
+            <div class="card-kicker"><span class="step-number">02</span><div><b>Profile objective</b><small>Set the tone and priority</small></div></div>
+            <div class="goal-grid" id="goalGrid"></div>
+          </section>
+          <section class="control-card glass-card">
+            <div class="card-kicker"><span class="step-number">03</span><div><b>Template system</b><small>Choose a layout foundation</small></div></div>
+            <div class="template-list" id="templateList"></div>
+            <button class="text-action" id="browseTemplatesBtn" type="button">Browse all templates <span>→</span></button>
+          </section>
+        </aside>
+
+        <section class="preview-column">
+          <div class="preview-toolbar glass-card">
+            <div class="view-switch" role="tablist" aria-label="Preview modes">
+              <button class="view-tab active" data-view="preview" type="button">◉ Preview</button>
+              <button class="view-tab" data-view="github" type="button">◈ GitHub view</button>
+              <button class="view-tab" data-view="markdown" type="button">{ } Markdown</button>
+            </div>
+            <div class="preview-actions"><button class="tool-button" id="copyBtn" type="button" title="Copy Markdown">⧉ <span>Copy</span></button><button class="tool-button" id="downloadBtn" type="button" title="Download README">↓ <span>README</span></button><button class="tool-button tool-export" id="exportBtn" type="button">Export ZIP <span>↗</span></button></div>
+          </div>
+          <div class="preview-frame glass-card" id="previewFrame">
+            <div class="preview-frame-top"><span><i></i><i></i><i></i></span><span id="previewPath">github.com / username</span><span class="preview-live"><b></b> LIVE PREVIEW</span></div>
+            <article id="previewCanvas" class="readme-canvas" aria-live="polite"></article>
+            <pre id="markdownCanvas" class="markdown-canvas hidden" aria-label="Generated Markdown"></pre>
+          </div>
+          <div class="preview-footnote"><span>↳</span> Preview approximates GitHub Markdown rendering. Final spacing may vary slightly on GitHub.</div>
+        </section>
+
+        <aside class="right-rail">
+          <div class="inspector-tabs glass-card" role="tablist" aria-label="Inspector panels"><button class="inspector-tab active" data-inspector="profile" type="button">Profile</button><button class="inspector-tab" data-inspector="style" type="button">Style</button><button class="inspector-tab" data-inspector="tools" type="button">Tools</button></div>
+          <div class="inspector-panel active" id="inspectorProfile">
+            <section class="control-card glass-card editor-card">
+              <div class="panel-title"><div><span class="eyebrow">CONTENT EDITOR</span><h3>Tell your story</h3></div><span class="panel-icon">✎</span></div>
+              <label class="field-label" for="nameInput">Display name</label><input class="text-input" id="nameInput" maxlength="80" placeholder="Your name">
+              <label class="field-label" for="headlineInput">Headline / role</label><input class="text-input" id="headlineInput" maxlength="160" placeholder="Software engineer · Building useful things">
+              <label class="field-label" for="aboutInput">About you</label><textarea class="text-input textarea" id="aboutInput" rows="4" maxlength="1200" placeholder="What do you build? What do you care about?"></textarea>
+              <div class="two-fields"><div><label class="field-label" for="locationInput">Location</label><input class="text-input" id="locationInput" placeholder="Shiraz, Iran"></div><div><label class="field-label" for="companyInput">Company</label><input class="text-input" id="companyInput" placeholder="Independent"></div></div>
+              <label class="field-label" for="websiteInput">Website</label><input class="text-input" id="websiteInput" placeholder="https://your-site.dev">
+              <label class="field-label" for="emailInput">Public email <span class="optional">optional</span></label><input class="text-input" id="emailInput" type="email" placeholder="you@example.com">
+              <label class="field-label" for="linksInput">Social links <span class="field-help">One per line: Label | URL</span></label><textarea class="text-input textarea compact-textarea" id="linksInput" rows="4" placeholder="GitHub | https://github.com/username&#10;LinkedIn | https://linkedin.com/in/username"></textarea>
+              <label class="field-label" for="skillsInput">Skills & tools <span class="field-help">Comma separated</span></label><textarea class="text-input textarea compact-textarea" id="skillsInput" rows="3" placeholder="JavaScript, Python, React, Docker"></textarea>
+            </section>
+            <section class="control-card glass-card editor-card">
+              <div class="panel-title"><div><span class="eyebrow">CAREER DETAILS</span><h3>More context</h3></div><span class="panel-icon">▤</span></div>
+              <label class="field-label" for="experienceInput">Experience <span class="field-help">Role | Company | Period | Detail</span></label><textarea class="text-input textarea" id="experienceInput" rows="3" placeholder="Software Developer | Example Co. | 2024 — Now | Built reliable web apps"></textarea>
+              <label class="field-label" for="educationInput">Education <span class="field-help">Degree | Institution | Period | Detail</span></label><textarea class="text-input textarea" id="educationInput" rows="3" placeholder="B.Sc. Computer Engineering | University | 2022 — 2026 | Software track"></textarea>
+              <label class="field-label" for="achievementsInput">Achievements & certifications <span class="field-help">One per line</span></label><textarea class="text-input textarea" id="achievementsInput" rows="3" placeholder="AWS Cloud Practitioner&#10;Hackathon finalist"></textarea>
+              <label class="field-label" for="supportInput">Support link <span class="field-help">Optional</span></label><input class="text-input" id="supportInput" placeholder="https://buymeacoffee.com/username">
+            </section>
+            <section class="control-card glass-card">
+              <div class="panel-title"><div><span class="eyebrow">GITHUB SIGNAL</span><h3>Profile snapshot</h3></div><span class="panel-icon">⌁</span></div>
+              <div class="signal-grid" id="signalGrid"></div>
+              <div class="language-summary" id="languageSummary"><span class="empty-note">Scan a profile to see its language signal.</span></div>
+            </section>
+            <section class="control-card glass-card">
+              <div class="panel-title"><div><span class="eyebrow">PROJECT CURATION</span><h3>Featured repositories</h3></div><button class="mini-action" id="selectTopProjectsBtn" type="button">Top picks</button></div>
+              <p class="panel-description">Select up to 8 repositories. The order you select them is used in the README.</p><div class="project-tools"><input id="projectSearchInput" class="text-input" placeholder="Search repositories…"><select id="projectSortSelect" class="text-input"><option value="stars">Most stars</option><option value="updated">Recently updated</option><option value="forks">Most forks</option><option value="name">Name A–Z</option></select></div>
+              <div class="project-picker" id="projectPicker"><span class="empty-note">Scan a GitHub profile to load repositories.</span></div>
+            </section>
+          </div>
+          <div class="inspector-panel" id="inspectorStyle">
+            <section class="control-card glass-card">
+              <div class="panel-title"><div><span class="eyebrow">VISUAL IDENTITY</span><h3>Choose a theme</h3></div><span class="panel-icon">◉</span></div>
+              <div class="theme-grid" id="themeGrid"></div>
+              <button class="text-action" id="browseThemesBtn" type="button">Browse all themes <span>→</span></button>
+            </section>
+            <section class="control-card glass-card">
+              <div class="panel-title"><div><span class="eyebrow">LAYOUT SETTINGS</span><h3>Fine tune</h3></div></div>
+              <label class="field-label" for="densitySelect">Content density</label><select class="text-input" id="densitySelect"><option value="compact">Compact</option><option value="balanced" selected>Balanced</option><option value="spacious">Spacious</option></select>
+              <label class="toggle-row"><span><b>Avatar</b><small>Show profile picture in hero</small></span><input type="checkbox" data-setting="showAvatar" checked></label>
+              <label class="toggle-row"><span><b>Badges</b><small>Show role and link badges</small></span><input type="checkbox" data-setting="showBadges" checked></label>
+              <label class="toggle-row"><span><b>Statistics</b><small>Show numeric profile signals</small></span><input type="checkbox" data-setting="showStats" checked></label>
+              <label class="toggle-row"><span><b>Glass effects</b><small>Keep the workspace translucent</small></span><input type="checkbox" data-setting="glass" checked></label>
+              <label class="toggle-row"><span><b>Ambient glow</b><small>Enable soft animated lighting</small></span><input type="checkbox" data-setting="glow" checked></label>
+              <label class="toggle-row"><span><b>Motion</b><small>Respect reduced-motion settings</small></span><input type="checkbox" data-setting="motion" checked></label>
+            </section>
+          </div>
+          <div class="inspector-panel" id="inspectorTools">
+            <section class="control-card glass-card">
+              <div class="panel-title"><div><span class="eyebrow">PROFILE ASSISTANT</span><h3>Improve the draft</h3></div><span class="panel-icon">✧</span></div>
+              <p class="panel-description">A local rule-based helper uses your objective, technologies and project metadata. It does not send your content to an AI service.</p>
+              <button class="btn btn-primary full-width" id="improveBtn" type="button">Generate better copy <span>✦</span></button><div class="suggestion-box" id="suggestionBox">Your suggestions will appear here.</div>
+            </section>
+            <section class="control-card glass-card">
+              <div class="panel-title"><div><span class="eyebrow">DRAFT MANAGEMENT</span><h3>Import & share</h3></div><span class="panel-icon">⇄</span></div>
+              <button class="btn btn-outline full-width" id="copyLinkBtn" type="button">Copy shareable settings link</button>
+              <button class="btn btn-outline full-width" id="exportJsonBtn" type="button">Export editable JSON</button>
+              <label class="btn btn-outline full-width file-label" for="importJsonInput">Import a saved draft <span>↑</span></label><input id="importJsonInput" type="file" accept="application/json,.json" hidden>
+              <p class="panel-description">Share links carry the username, objective, template and theme. Your private draft text stays in this browser unless you export JSON.</p>
+              <button class="text-action danger-action" id="resetDraftBtn" type="button">Reset this browser draft</button>
+            </section>
+          </div>
+        </aside>
       </div>
+
+      <section class="section-builder glass-card">
+        <div class="builder-heading"><div><span class="eyebrow">02 / CONTENT ARCHITECTURE</span><h3>Shape the README structure.</h3><p>Reorder sections, remove what you do not need, or add new building blocks.</p></div><div class="builder-add"><select id="addSectionSelect" class="text-input" aria-label="Choose a section to add"></select><button class="btn btn-outline" id="addSectionBtn" type="button">＋ Add section</button><button class="btn btn-quiet" id="resetSectionsBtn" type="button">Reset layout</button></div></div>
+        <div class="section-timeline" id="timeline"></div>
+      </section>
+    </main>
+
+    <section id="templates" class="catalog-section">
+      <div class="section-heading"><div><span class="eyebrow">03 / TEMPLATE LIBRARY</span><h2>Start with the right framework.</h2><p>Each system is a different content strategy, not just a different coat of paint.</p></div><div class="catalog-filter"><input id="templateSearchInput" class="text-input" placeholder="Search templates…"><select id="templateCategorySelect" class="text-input"><option value="all">All categories</option></select></div></div>
       <div class="catalog-grid" id="catalogGrid"></div>
     </section>
 
-    <section id="themes" class="catalog-section compact-section">
-      <div class="catalog-head">
-        <div><span class="eyebrow">THEME SYSTEM</span><h2>Twenty visual worlds.</h2></div>
-      </div>
+    <section id="themes" class="catalog-section themes-section">
+      <div class="section-heading"><div><span class="eyebrow">04 / THEME LIBRARY</span><h2>Twenty-four distinct visual worlds.</h2><p>Color tokens stay consistent across the editor, preview and exported assets.</p></div><div class="catalog-filter"><input id="themeSearchInput" class="text-input" placeholder="Search themes…"></div></div>
       <div class="theme-catalog" id="themeCatalog"></div>
     </section>
 
-    <section id="portfolio" class="catalog-section">
-  <div class="catalog-head"><div><span class="eyebrow">02 / PORTFOLIO BUILDER</span><h2>Your work deserves its own destination.</h2></div><p>Use the same GitHub signal to create a polished personal portfolio direction, from glass systems to immersive cyber layouts.</p></div>
-  <div class="portfolio-showcase"><article class="portfolio-browser"><div class="browser-bar"><span></span><span></span><span></span><b>profileforge / portfolio</b></div><div class="browser-body"><div class="browser-side"><div class="browser-avatar"></div><b>@octocat</b><small>Developer advocate</small><div class="side-stat"><b>42</b><span>repos</span></div><div class="side-stat"><b>23K</b><span>stars</span></div></div><div class="browser-content"><div class="browser-hero"><span class="eyebrow">SIGNATURE PROFILE</span><h3>Build things worth clicking.</h3><p>Projects, skills, activity and links gathered into one visual world.</p></div><div class="browser-cards"><div></div><div></div><div></div></div></div></div></article><div class="portfolio-copy"><span class="eyebrow">ONE PROFILE, MANY SURFACES</span><h3>README + portfolio + visual assets.</h3><p>The same scanned profile can power more than a README. Keep your visual language consistent across a profile site and downloadable assets.</p><div class="tag-row"><span class="tag">Static sites</span><span class="tag">Project cards</span><span class="tag">Live GitHub signal</span><span class="tag">Responsive</span></div></div></div>
-</section>
-<section id="pricing" class="catalog-section compact-section">
-  <div class="catalog-head"><div><span class="eyebrow">PRICING</span><h2>Everything here runs on your Pages site.</h2></div><p>No forced account, no backend dependency and no paid wall for the core generator.</p></div>
-  <div class="pricing-grid"><article class="price-card"><span class="eyebrow">FREE / CORE</span><h3>$0</h3><p>Full browser studio and export flow.</p><div class="price-list"><span>✓ Real public GitHub scan</span><span>✓ 12 profile systems</span><span>✓ 20 themes</span><span>✓ Markdown + SVG export</span><span>✓ Shareable draft URLs</span></div></article><article class="price-card featured"><span class="eyebrow">POWER USER</span><h3>Self-hosted</h3><p>Bring your own GitHub Pages repository and optional Actions.</p><div class="price-list"><span>✓ Automated asset refresh</span><span>✓ Custom templates</span><span>✓ Custom donation section</span><span>✓ Extend with your own widgets</span><span>✓ No platform lock-in</span></div></article><article class="price-card"><span class="eyebrow">EXTENSION READY</span><h3>Build more</h3><p>Use the data layer to add avatars, cards, daily dev images or other profile tooling.</p><div class="price-list"><span>✓ JSON theme data</span><span>✓ JSON template data</span><span>✓ Node automation script</span><span>✓ GitHub Action example</span><span>✓ Clean-room architecture</span></div></article></div>
-</section>
-
-<section id="docs" class="catalog-section docs-section">
-      <div class="catalog-head"><div><span class="eyebrow">DOCUMENTATION</span><h2>Publish to your profile in minutes.</h2></div></div>
+    <section id="docs" class="docs-section">
+      <div class="section-heading"><div><span class="eyebrow">05 / PUBLISHING GUIDE</span><h2>From draft to profile README.</h2><p>Everything runs as a static site. Your exported README works independently of ProfileForge.</p></div></div>
       <div class="docs-grid">
-        <article><span>01</span><h3>Enter a username</h3><p>Public profile, repositories and languages are read directly from the GitHub API.</p></article>
-        <article><span>02</span><h3>Choose your direction</h3><p>Switch goals and templates without losing your content or preview state.</p></article>
-        <article><span>03</span><h3>Export a package</h3><p>Download README.md plus local SVG assets and automation helpers for your profile repository.</p></article>
+        <article class="doc-card glass-card"><span class="doc-number">01</span><div class="doc-icon">⌕</div><h3>Scan a profile</h3><p>Load public profile metadata and repositories directly from GitHub. You can also edit every field manually.</p></article>
+        <article class="doc-card glass-card"><span class="doc-number">02</span><div class="doc-icon">✎</div><h3>Shape your story</h3><p>Pick a goal, template, theme and section order. Curate projects and add professional details.</p></article>
+        <article class="doc-card glass-card"><span class="doc-number">03</span><div class="doc-icon">↧</div><h3>Export the package</h3><p>Download a ZIP with README.md, generated SVGs, editable JSON and an optional safe refresh workflow.</p></article>
+      </div>
+      <div class="faq-grid">
+        <details><summary>Does the scan require a GitHub token?</summary><p>No. It calls the public GitHub REST API without authentication. The unauthenticated API has a relatively low hourly rate limit, so very large scans may need to be retried later or configured with a token outside this public static app.</p></details>
+        <details><summary>Will the exported README need this website?</summary><p>No. It is normal Markdown plus local SVG assets. Upload README.md and the included assets folder to a repository named exactly like your GitHub username.</p></details>
+        <details><summary>Does the automatic workflow overwrite my README?</summary><p>No. The included optional workflow only refreshes the generated contribution SVG. It deliberately does not create, replace or edit README.md.</p></details>
+        <details><summary>Where is my draft stored?</summary><p>In this browser's local storage. Export JSON to back it up or move it to another device. A share link contains only basic layout settings, not your full profile text.</p></details>
       </div>
     </section>
 
-    <section class="catalog-section compact-section"><div class="catalog-head"><div><span class="eyebrow">FAQ</span><h2>Designed to stay useful.</h2></div></div><div class="faq-grid"><details open><summary>Does the username scanner use real GitHub data?</summary><p>Yes. Profile and repository metadata come directly from GitHub's public REST API. Contribution history is loaded from a public contribution-data service because GitHub's normal REST profile endpoint does not expose the calendar directly.</p></details><details><summary>Can the exported README work without ProfileForge?</summary><p>Yes. The README is ordinary Markdown and the companion SVG assets are local files. Upload them into your profile repository.</p></details><details><summary>Can I make the profile auto-refresh?</summary><p>Yes. The repository includes an optional GitHub Actions workflow and a Node script for scheduled asset refreshes.</p></details><details><summary>Are these GitSkins files?</summary><p>No. This is an independent clean-room implementation inspired by public interaction patterns and publicly documented theme/template concepts. No proprietary source code or private assets are included.</p></details></div></section>
-
-<footer class="footer">ProfileForge is an independent, clean-room implementation inspired by the public interaction patterns of modern GitHub README studios.</footer>
+    <footer class="footer"><div class="footer-brand"><img src="assets/brand-mark.svg" alt=""><b>ProfileForge</b></div><p>Built for developers who want their work to speak clearly.</p><div class="footer-links"><a href="#studio">Studio</a><a href="#templates">Templates</a><a href="#themes">Themes</a><a href="https://github.com/mehrdadmb2/github-profile-studio" target="_blank" rel="noreferrer">Source ↗</a></div><small>Static · Open · Self-hostable · © <span id="yearNow"></span> ProfileForge</small></footer>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <div class="modal-backdrop hidden" id="modalBackdrop">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <div class="modal-head"><div><span class="eyebrow">EXPORT</span><h2 id="modalTitle">Your README package</h2></div><button class="icon-btn" id="closeModal">×</button></div>
-      <p>Download the generated README and companion assets as separate files. The optional GitHub Action keeps external widgets refreshed.</p>
-      <div class="modal-actions"><button class="primary-btn" id="downloadPackageBtn">Download package</button><button class="ghost-btn" id="downloadActionBtn">Download Action</button></div>
-      <div class="modal-code"><code id="exportSummary"></code></div>
-    </div>
-  </div>
+  <div class="modal-backdrop hidden" id="exportModal" role="presentation"><div class="modal glass-card" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle"><div class="modal-head"><div><span class="eyebrow">YOUR PACKAGE IS READY</span><h2 id="exportModalTitle">Export ProfileForge</h2></div><button class="icon-button" id="closeExportModal" type="button" aria-label="Close">×</button></div><p id="exportModalText">Download a self-contained README package.</p><div class="export-file-list" id="exportFileList"></div><div class="modal-actions"><button class="btn btn-primary" id="confirmExportBtn" type="button">Download ZIP <span>↓</span></button><button class="btn btn-outline" id="exportReadmeOnlyBtn" type="button">README only</button></div><p class="modal-footnote">Your README and assets are generated in your browser. Nothing is uploaded automatically.</p></div></div>
 
-  <script src="js/app.js"></script>
+  <script src="data/config.js"></script><script src="data/catalog.js"></script><script src="js/app.js"></script>
 </body>
 </html>

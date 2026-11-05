@@ -1,35 +1,24 @@
 # Profile README Template Library
 
-The live Studio includes these structures and populates them from a public GitHub profile.
+The live catalog is maintained in `data/catalog.js`. The studio currently includes 16 data-driven profile systems:
 
-## Showcase
+| Template | Best suited for |
+|---|---|
+| Aurora | Balanced personal brand |
+| Recruiter Ready | Job search and professional proof |
+| Open Source Maintainer | Public projects and community work |
+| Minimal | Concise, low-noise profiles |
+| Matrix Terminal | Technical / engineering identity |
+| Cybernetic | Neon visual engineering profile |
+| Executive | Leadership and experience |
+| Student Journey | Education and learning progress |
+| Research Lab | Research, methods and publications |
+| Product Founder | Product building and entrepreneurship |
+| Independent Builder | Freelance and consulting |
+| Creative Studio | Design and creative technology |
+| Frosted Glass | Glassmorphism-heavy visual profile |
+| Deep Ocean | Calm, focused profile |
+| Retro Wave | Expressive retro-futuristic profile |
+| Portfolio Plus | Full personal portfolio overview |
 
-Best for a complete personal brand: identity → about → proof → projects → stack → stats → contact.
-
-## Recruiter-ready
-
-Best for hiring: identity → measurable proof → selected work → stack → contact.
-
-## Open-source
-
-Best for maintainers: identity → context → projects → open-source invitation → stack → contact.
-
-## Technical authority
-
-Best for architecture-heavy profiles: identity → proof → projects → stack → terminal → contact.
-
-## Student / learning
-
-Best for learning in public: identity → about → projects → learning journey → stack → contact.
-
-## Terminal
-
-Neofetch-inspired: identity → terminal → proof → projects → stack → contact.
-
-## Minimal
-
-Small and focused: identity → projects → contact.
-
-## Cinematic
-
-Visual-first: identity → about → projects → stats → contact.
+Each template stores its section order as data. Add a template to `PF_CATALOG.templates` to make it available in the left rail and template library.

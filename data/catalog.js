@@ -1,0 +1,86 @@
+/* Central catalog: themes, goals, templates, sections and technology dictionary. */
+window.PF_CATALOG = {
+  goals: [
+    {id:'hired',name:'Get hired',icon:'🎯',desc:'Recruiter-first clarity and proof'},
+    {id:'opensource',name:'Open source',icon:'🌍',desc:'Maintainer credibility and community'},
+    {id:'freelance',name:'Freelance',icon:'🧩',desc:'Services, outcomes and trust'},
+    {id:'founder',name:'Founder',icon:'🚀',desc:'Products, execution and vision'},
+    {id:'student',name:'Student',icon:'🎓',desc:'Learning, experiments and growth'},
+    {id:'research',name:'Research',icon:'🔬',desc:'Methods, publications and evidence'},
+    {id:'creator',name:'Creator',icon:'✨',desc:'Distinct identity and creative work'},
+    {id:'general',name:'Personal brand',icon:'🪄',desc:'A balanced professional profile'}
+  ],
+  templates: [
+    {id:'aurora',name:'Aurora',category:'Signature',icon:'🌌',desc:'Balanced identity with luminous glass details.',sections:['hero','about','highlights','skills','projects','stats','activity','connect']},
+    {id:'recruiter',name:'Recruiter Ready',category:'Career',icon:'🧭',desc:'Fast-scanning proof, strengths and selected work.',sections:['hero','about','highlights','skills','projects','experience','education','connect']},
+    {id:'maintainer',name:'Open Source Maintainer',category:'Career',icon:'🌍',desc:'Projects, collaboration paths and community signals.',sections:['hero','about','projects','skills','highlights','activity','achievements','connect']},
+    {id:'minimal',name:'Minimal',category:'Clean',icon:'◻️',desc:'Low-noise, concise and readable on every device.',sections:['hero','about','skills','projects','connect']},
+    {id:'matrix',name:'Matrix Terminal',category:'Technical',icon:'⌘',desc:'Terminal-inspired engineering identity.',sections:['hero','about','skills','projects','stats','activity','connect']},
+    {id:'cyber',name:'Cybernetic',category:'Technical',icon:'⚡',desc:'High-contrast neon technical portfolio.',sections:['hero','highlights','skills','projects','stats','activity','connect']},
+    {id:'executive',name:'Executive',category:'Career',icon:'💼',desc:'Leadership, experience and measurable outcomes.',sections:['hero','about','highlights','experience','projects','achievements','connect']},
+    {id:'student',name:'Student Journey',category:'Learning',icon:'🎓',desc:'Education, learning path and practical projects.',sections:['hero','about','education','skills','projects','activity','connect']},
+    {id:'research',name:'Research Lab',category:'Learning',icon:'🔬',desc:'Research interests, methods and publications.',sections:['hero','about','skills','projects','education','achievements','connect']},
+    {id:'founder',name:'Product Founder',category:'Business',icon:'🚀',desc:'Products, traction, roadmap and collaborations.',sections:['hero','about','highlights','projects','experience','achievements','connect']},
+    {id:'freelancer',name:'Independent Builder',category:'Business',icon:'🧩',desc:'Services, case studies and clear contact paths.',sections:['hero','about','highlights','skills','projects','experience','connect']},
+    {id:'creative',name:'Creative Studio',category:'Creative',icon:'🎨',desc:'Expressive typography and visual storytelling.',sections:['hero','about','projects','achievements','skills','connect']},
+    {id:'frosted',name:'Frosted Glass',category:'Visual',icon:'🫧',desc:'Layered glass surfaces and soft gradient lighting.',sections:['hero','about','highlights','projects','skills','activity','connect']},
+    {id:'ocean',name:'Deep Ocean',category:'Visual',icon:'🌊',desc:'Calm blue-green system with generous whitespace.',sections:['hero','about','skills','projects','stats','connect']},
+    {id:'retro',name:'Retro Wave',category:'Visual',icon:'🕹️',desc:'Retro-futuristic profile with vivid color accents.',sections:['hero','highlights','projects','skills','activity','connect']},
+    {id:'portfolio',name:'Portfolio Plus',category:'Signature',icon:'🗂️',desc:'Comprehensive personal portfolio overview.',sections:['hero','about','highlights','skills','projects','experience','education','achievements','activity','connect']}
+  ],
+  themes: [
+    {id:'aurora',name:'Aurora',a:'#8b7cff',b:'#39d9c7',bg:'#080d18',surface:'#111a2b',text:'#edf3ff',muted:'#9aa9c4'},
+    {id:'matrix',name:'Matrix',a:'#48f59a',b:'#b5ff62',bg:'#050d0a',surface:'#0d1c15',text:'#e7fff0',muted:'#8db39a'},
+    {id:'cyberpunk',name:'Cyberpunk',a:'#ff4ecb',b:'#39e8ff',bg:'#0b0814',surface:'#1a1025',text:'#fff0fc',muted:'#b5a1c2'},
+    {id:'ocean',name:'Ocean',a:'#38bdf8',b:'#2dd4bf',bg:'#06121c',surface:'#0c202d',text:'#e9f8ff',muted:'#91b3c6'},
+    {id:'sunset',name:'Sunset',a:'#ff9a44',b:'#ff4d8d',bg:'#160b12',surface:'#261321',text:'#fff1e9',muted:'#c6a0a8'},
+    {id:'dracula',name:'Dracula',a:'#bd93f9',b:'#ff79c6',bg:'#100d18',surface:'#211a2d',text:'#f8f2ff',muted:'#b5a9c9'},
+    {id:'midnight',name:'Midnight',a:'#818cf8',b:'#60a5fa',bg:'#080b18',surface:'#141a30',text:'#eff2ff',muted:'#9ca9d1'},
+    {id:'emerald',name:'Emerald',a:'#34d399',b:'#a3e635',bg:'#06110d',surface:'#102219',text:'#edfff5',muted:'#92b5a1'},
+    {id:'amber',name:'Amber',a:'#fbbf24',b:'#fb7185',bg:'#140e08',surface:'#251a11',text:'#fff8e8',muted:'#c4ad8e'},
+    {id:'rose',name:'Rose',a:'#fb7185',b:'#c084fc',bg:'#160b13',surface:'#291321',text:'#fff0f5',muted:'#c6a2b1'},
+    {id:'sapphire',name:'Sapphire',a:'#60a5fa',b:'#818cf8',bg:'#07101d',surface:'#111f35',text:'#eff6ff',muted:'#9eb2ce'},
+    {id:'mint',name:'Mint',a:'#5eead4',b:'#86efac',bg:'#071310',surface:'#10231e',text:'#ecfffb',muted:'#9abdb4'},
+    {id:'lavender',name:'Lavender',a:'#a78bfa',b:'#c4b5fd',bg:'#100d19',surface:'#211b30',text:'#f7f2ff',muted:'#b8accb'},
+    {id:'crimson',name:'Crimson',a:'#fb4b4e',b:'#f97316',bg:'#15090b',surface:'#281216',text:'#fff0f0',muted:'#c49b9f'},
+    {id:'arctic',name:'Arctic',a:'#67e8f9',b:'#93c5fd',bg:'#07131a',surface:'#10222c',text:'#effcff',muted:'#9bbec8'},
+    {id:'mono',name:'Monochrome',a:'#e2e8f0',b:'#94a3b8',bg:'#0b0e12',surface:'#171c22',text:'#f8fafc',muted:'#9ca3af'},
+    {id:'terminal',name:'Terminal',a:'#a3e635',b:'#4ade80',bg:'#030806',surface:'#0a160e',text:'#edffdf',muted:'#91aa84'},
+    {id:'candy',name:'Candy',a:'#f0abfc',b:'#67e8f9',bg:'#120b18',surface:'#24152b',text:'#fff2ff',muted:'#c4a9c6'},
+    {id:'volcano',name:'Volcano',a:'#fb923c',b:'#f43f5e',bg:'#160b09',surface:'#291713',text:'#fff3ed',muted:'#c5a092'},
+    {id:'forest',name:'Forest',a:'#86efac',b:'#22c55e',bg:'#07110b',surface:'#112217',text:'#edfff0',muted:'#9eb9a3'},
+    {id:'galaxy',name:'Galaxy',a:'#818cf8',b:'#e879f9',bg:'#090817',surface:'#19172d',text:'#f5f1ff',muted:'#aaa4c9'},
+    {id:'copper',name:'Copper',a:'#f0a36a',b:'#e4c59b',bg:'#130d0a',surface:'#251a14',text:'#fff4e9',muted:'#c2a995'},
+    {id:'ice',name:'Ice',a:'#a5f3fc',b:'#c4b5fd',bg:'#081117',surface:'#14232d',text:'#f0fdff',muted:'#a5bdc8'},
+    {id:'neon-orange',name:'Neon Orange',a:'#ff7a18',b:'#b7ff3c',bg:'#0c0d09',surface:'#1c2015',text:'#f9ffe9',muted:'#b2bd91'}
+  ],
+  sections: [
+    {id:'hero',name:'Identity / Hero',icon:'✦',desc:'Name, avatar, headline and profile badges'},
+    {id:'about',name:'About me',icon:'👋',desc:'A short introduction and professional story'},
+    {id:'highlights',name:'Highlights',icon:'📌',desc:'Key metrics, location and professional signal'},
+    {id:'skills',name:'Tech stack',icon:'🧰',desc:'Languages, tools and capabilities'},
+    {id:'projects',name:'Featured projects',icon:'🚀',desc:'Selected repositories and project cards'},
+    {id:'stats',name:'GitHub statistics',icon:'📊',desc:'Repository, star, fork and follower totals'},
+    {id:'activity',name:'Contribution activity',icon:'🟩',desc:'Contribution calendar and activity summary'},
+    {id:'experience',name:'Experience',icon:'💼',desc:'Roles, teams and professional experience'},
+    {id:'education',name:'Education',icon:'🎓',desc:'Education and learning history'},
+    {id:'achievements',name:'Achievements',icon:'🏆',desc:'Awards, certifications and milestones'},
+    {id:'connect',name:'Connect',icon:'🔗',desc:'Website, email and social profiles'},
+    {id:'support',name:'Support my work',icon:'☕',desc:'Optional support / donation link'}
+  ],
+  tech: {
+    JavaScript:{icon:'🟨',label:'JavaScript'},TypeScript:{icon:'🔷',label:'TypeScript'},Python:{icon:'🐍',label:'Python'},Java:{icon:'☕',label:'Java'},'C#':{icon:'🟪',label:'C#'},'C++':{icon:'⚙️',label:'C++'},C:{icon:'🔧',label:'C'},PHP:{icon:'🐘',label:'PHP'},Ruby:{icon:'💎',label:'Ruby'},Go:{icon:'🐹',label:'Go'},Rust:{icon:'🦀',label:'Rust'},Kotlin:{icon:'🟣',label:'Kotlin'},Swift:{icon:'🍎',label:'Swift'},Dart:{icon:'🎯',label:'Dart'},HTML:{icon:'🌐',label:'HTML'},CSS:{icon:'🎨',label:'CSS'},SCSS:{icon:'🎨',label:'SCSS'},Shell:{icon:'⌨️',label:'Shell'},PowerShell:{icon:'🪟',label:'PowerShell'},Dockerfile:{icon:'🐳',label:'Docker'},
+    React:{icon:'⚛️',label:'React'},'Next.js':{icon:'▲',label:'Next.js'},'Node.js':{icon:'🟢',label:'Node.js'},Express:{icon:'🚂',label:'Express'},Vite:{icon:'⚡',label:'Vite'},Angular:{icon:'🅰️',label:'Angular'},Vue:{icon:'💚',label:'Vue'},Svelte:{icon:'🧡',label:'Svelte'},'Tailwind CSS':{icon:'🌬️',label:'Tailwind'},Bootstrap:{icon:'🅱️',label:'Bootstrap'},'Three.js':{icon:'🧊',label:'Three.js'},WebGL:{icon:'🧿',label:'WebGL'},
+    Git:{icon:'🌿',label:'Git'},GitHub:{icon:'🐙',label:'GitHub'},'GitHub Actions':{icon:'⚙️',label:'Actions'},Docker:{icon:'🐳',label:'Docker'},Kubernetes:{icon:'☸️',label:'Kubernetes'},Linux:{icon:'🐧',label:'Linux'},AWS:{icon:'☁️',label:'AWS'},Cloudflare:{icon:'☁️',label:'Cloudflare'},Nginx:{icon:'🟩',label:'Nginx'},
+    PostgreSQL:{icon:'🐘',label:'PostgreSQL'},MySQL:{icon:'🐬',label:'MySQL'},MongoDB:{icon:'🍃',label:'MongoDB'},Redis:{icon:'🔴',label:'Redis'},SQLite:{icon:'🗃️',label:'SQLite'},Firebase:{icon:'🔥',label:'Firebase'},Supabase:{icon:'🟩',label:'Supabase'},
+    Blender:{icon:'🌀',label:'Blender'},Unity:{icon:'🎮',label:'Unity'},'Unreal Engine':{icon:'🎮',label:'Unreal Engine'},Arduino:{icon:'🔌',label:'Arduino'},ESP32:{icon:'📡',label:'ESP32'},'Raspberry Pi':{icon:'🥧',label:'Raspberry Pi'},MATLAB:{icon:'📐',label:'MATLAB'},OpenCV:{icon:'👁️',label:'OpenCV'},TensorFlow:{icon:'🧠',label:'TensorFlow'},PyTorch:{icon:'🔥',label:'PyTorch'},'Jupyter Notebook':{icon:'📓',label:'Jupyter'},
+    Figma:{icon:'🎨',label:'Figma'},Photoshop:{icon:'🖼️',label:'Photoshop'},'After Effects':{icon:'✨',label:'After Effects'},'Premiere Pro':{icon:'🎬',label:'Premiere Pro'},'DaVinci Resolve':{icon:'🎞️',label:'DaVinci Resolve'},'Cinema 4D':{icon:'🎥',label:'Cinema 4D'},SolidWorks:{icon:'🛠️',label:'SolidWorks'},AutoCAD:{icon:'📏',label:'AutoCAD'}
+  },
+  dictionaries: {
+    socialDomains: ['github.com','linkedin.com','x.com','twitter.com','instagram.com','youtube.com','t.me','telegram.me','dev.to','medium.com','stackoverflow.com','codepen.io','behance.net','dribbble.com'],
+    markdownEscapes: ['[',']','|'],
+    experienceHint: 'Role | Company | Period | One-line impact',
+    educationHint: 'Degree / course | Institution | Period | Detail',
+    achievementsHint: 'One award, certificate or milestone per line'
+  }
+};
